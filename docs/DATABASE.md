@@ -46,9 +46,11 @@ roles
                            │
                            ├──────< borrowings
                            │             │
-                           │             └──────< borrowing_details
-                           │                             │
-                           │                             └────── book_inventories
+                           │             ├──────< borrowing_details
+                           │             │                 │
+                           │             │                 └────── book_inventories
+                           │             │
+                           │             └──────< returns
                            │
                            └──────< fines
 
@@ -62,7 +64,7 @@ books ─────────< book_inventories
 
 shelves ───────< book_inventories
 
-users ───────< activity_logs
+users ───────< audit_logs
 ```
 
 Arsitektur data:
@@ -70,12 +72,18 @@ Arsitektur data:
 ```text
 Book
   ↓
-BookInventory (Book Copies)
+BookInventory
   ↓
-Borrow
+BorrowingDetail
+  ↓
+Borrowing
+  ↓
+Return
+  ↓
+Fine
 ```
 
-Peminjaman mengacu pada **BookInventory**, bukan langsung ke Book.
+Peminjaman dilakukan berdasarkan **BookInventory**. `Book` hanya menyimpan metadata bibliografi, bukan stok atau inventaris fisik.
 
 ---
 
@@ -403,9 +411,9 @@ Relationship
 
 ---
 
-# activity_logs
+# audit_logs
 
-Audit aktivitas pengguna.
+Audit trail aktivitas sistem dan kepatuhan.
 
 | Column      | Type      |
 | ----------- | --------- |
@@ -420,7 +428,7 @@ Audit aktivitas pengguna.
 
 Relationship
 
-* One User → Many Activity Logs
+* One User → Many Audit Logs
 
 ---
 
@@ -530,7 +538,7 @@ User
  1
  │
  N
-Activity Log
+Audit Log
 ```
 
 ---
@@ -557,7 +565,10 @@ Create index pada:
 * borrowings.borrow_date
 * borrowings.status
 * borrowing_details.book_inventory_id
-* activity_logs.user_id
+* returns.borrowing_id
+* returns.return_date
+* fines.borrowing_id
+* audit_logs.user_id
 
 ---
 
@@ -573,7 +584,7 @@ Create index pada:
 * `return_date` tidak boleh lebih awal dari `borrow_date`.
 * Nominal denda tidak boleh negatif.
 * Satu eksemplar (BookInventory) memiliki paling banyak satu peminjaman aktif.
-* Stok (jumlah eksemplar tersedia) dihitung dari `book_inventories` berstatus `available`; tidak disimpan sebagai kolom.
+* Ketersediaan buku dihitung dari `book_inventories` berstatus `available`; tidak disimpan sebagai kolom pada `books`.
 
 ---
 
@@ -628,5 +639,6 @@ Untuk pengembangan berikutnya dapat ditambahkan:
 10. book_inventories
 11. borrowings
 12. borrowing_details
-13. fines
-14. activity_logs
+13. returns
+14. fines
+15. audit_logs

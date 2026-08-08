@@ -152,14 +152,14 @@ Minimal:
 
 ---
 
-## Stok & Stok Tersedia (dihitung otomatis)
+## Ketersediaan Buku (dihitung otomatis)
 
-Buku (judul) tidak lagi memiliki kolom `stock` dan `available_stock`.
+`Book` tidak lagi menyimpan kolom `stock` dan `available_stock`.
 
-* Stok total = jumlah `book_inventories` yang belum di-soft delete.
-* Stok tersedia = jumlah `book_inventories` berstatus `available`.
+* Ketersediaan total dihitung dari jumlah `book_inventories` yang belum di-soft delete.
+* Ketersediaan saat ini dihitung berdasarkan jumlah `book_inventories` berstatus `available`.
 
-Nilai ini dihitung otomatis dan divalidasi pada bagian **Book Inventory Validation**.
+Nilai ini diturunkan dari `BookInventory` dan divalidasi pada bagian **Book Inventory Validation**.
 
 ---
 

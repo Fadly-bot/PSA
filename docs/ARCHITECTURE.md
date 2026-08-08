@@ -230,7 +230,7 @@ Setiap operasi harus memiliki:
 
 # Logging
 
-Aktivitas penting dicatat ke `activity_logs`, seperti:
+Aktivitas penting dicatat ke `audit_logs`, seperti:
 
 * Login
 * Logout

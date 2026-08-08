@@ -572,7 +572,7 @@ condition
 
 ---
 
-# Activity Log
+# Audit Log
 
 Catat aktivitas berikut:
 

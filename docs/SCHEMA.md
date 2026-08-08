@@ -344,7 +344,7 @@ created_at: timestamp
 
 ---
 
-## activity_logs
+## audit_logs
 
 ```ts
 id: uuid
@@ -373,7 +373,7 @@ roles (1) ----------- (N) users
 
 ```
 users (1) ----------- (1) members
-users (1) ----------- (N) activity_logs
+users (1) ----------- (N) audit_logs
 ```
 
 ---
@@ -397,6 +397,14 @@ book_sources (1) ------ (N) book_inventories
 
 ---
 
+## returnsRelations
+
+```
+borrowings (1) -------- (N) returns
+```
+
+---
+
 ## bookInventoriesRelations
 
 ```
@@ -413,6 +421,7 @@ book_inventories (1) -- (N) borrowing_details
 ```
 members (1) ----------- (N) borrowings
 borrowings (1) -------- (N) borrowing_details
+borrowings (1) -------- (1) returns
 borrowings (1) -------- (1) fines
 ```
 
@@ -496,8 +505,8 @@ borrowing_details.book_inventory_id
 ## Audit Optimization
 
 ```
-activity_logs.user_id
-activity_logs.created_at
+audit_logs.user_id
+audit_logs.created_at
 ```
 
 ---
@@ -547,8 +556,9 @@ Urutan migration agar foreign key tidak gagal:
 10_book_inventories
 11_borrowings
 12_borrowing_details
-13_fines
-14_activity_logs
+13_returns
+14_fines
+15_audit_logs
 ```
 
 ---
@@ -626,5 +636,5 @@ status: active
 * Gunakan transaction ketika melakukan peminjaman dan pengembalian agar konsistensi eksemplar (BookInventory) selalu terjaga.
 * Ubah `book_inventories.status` menjadi `borrowed` saat dipinjam dan kembali ke `available` saat dikembalikan.
 * Stok tersedia dihitung dari `book_inventories` berstatus `available`.
-* Seluruh operasi penting harus membuat record pada `activity_logs`.
+* Seluruh operasi penting harus membuat record pada `audit_logs`.
 * Validasi seluruh input menggunakan Zod sebelum query database dijalankan.

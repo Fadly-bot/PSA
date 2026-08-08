@@ -123,7 +123,7 @@ Dapat:
 * Kelola Role
 * Kelola Pengaturan
 * Kelola Laporan
-* Melihat Activity Log
+* Melihat Audit Log
 * Menghapus data permanen
 
 ---
@@ -288,7 +288,7 @@ Semua route dashboard memerlukan session yang valid.
 | CRUD Rak          |   ❌   |    ❌   |   ✅   |   ✅   |
 | CRUD Penerbit     |   ❌   |    ❌   |   ✅   |   ✅   |
 | Kelola User       |   ❌   |    ❌   |   ❌   |   ✅   |
-| Activity Log      |   ❌   |    ❌   |   ❌   |   ✅   |
+| Audit Log         |   ❌   |    ❌   |   ❌   |   ✅   |
 | Pengaturan Sistem |   ❌   |    ❌   |   ❌   |   ✅   |
 
 ---

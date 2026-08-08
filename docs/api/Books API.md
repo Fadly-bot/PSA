@@ -154,7 +154,7 @@ Admin
 
 * Hapus data database.
 * Hapus cover dari Storage.
-* Catat pada Activity Log.
+* Catat pada Audit Log.
 
 ---
 
@@ -259,21 +259,6 @@ Menghapus cover lama.
 ### Purpose
 
 Membuat salinan data buku tanpa menyalin ISBN.
-
----
-
-## updateBookStock()
-
-### Purpose
-
-Tidak lagi digunakan pada entity Buku.
-
-Stok dikelola melalui CRUD Inventaris Buku (`book_inventories`).
-
-Business Rules
-
-* Stok total dihitung dari jumlah `book_inventories` yang belum di-soft delete.
-* Stok tersedia dihitung dari `book_inventories` berstatus `available`.
 
 ---
 

@@ -220,7 +220,7 @@ User
 
 Setting
 
-(Activity Log)
+(Audit Log)
 ```
 
 ---
@@ -529,7 +529,7 @@ settings
 
 users
 
-activity_logs
+audit_logs
 ```
 
 ---
@@ -546,7 +546,7 @@ is_public
 
 ---
 
-# Activity Log
+# Audit Log
 
 Catat aktivitas berikut:
 
@@ -561,7 +561,7 @@ Catat aktivitas berikut:
 # Security Guidelines
 
 - Hanya Admin yang memiliki akses.
-- Seluruh perubahan dicatat pada Activity Log.
+- Seluruh perubahan dicatat pada Audit Log.
 - Konfigurasi sensitif tidak boleh dikirim ke frontend.
 - Import hanya menerima file yang telah divalidasi.
 - Perubahan konfigurasi harus menggunakan Database Transaction.
@@ -594,6 +594,6 @@ Implementasi Settings API dianggap selesai apabila:
 - Validasi menggunakan Zod.
 - Authorization mengikuti `PERMISSIONS.md`.
 - Response mengikuti `ERRORS.md`.
-- Activity Log tercatat.
+- Audit Log tercatat.
 - Database Transaction digunakan saat memperbarui banyak konfigurasi.
 - Seluruh implementasi konsisten dengan dokumentasi proyek.

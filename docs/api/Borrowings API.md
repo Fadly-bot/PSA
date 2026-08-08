@@ -535,7 +535,7 @@ Update Book Inventory
 
 ↓
 
-Create Activity Log
+Create Audit Log
 
 ↓
 
@@ -550,7 +550,7 @@ Rollback
 
 ---
 
-# Activity Log
+# Audit Log
 
 Catat aktivitas berikut:
 

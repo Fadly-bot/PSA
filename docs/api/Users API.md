@@ -10,7 +10,7 @@ Modul Users digunakan untuk mengelola akun yang dapat mengakses sistem, termasuk
 - Staff / Petugas
 - Member (Anggota)
 
-Autentikasi menggunakan **Supabase Auth**, sedangkan data profil disimpan pada tabel `users`.
+Autentikasi menggunakan **Better Auth**, sedangkan data profil disimpan pada tabel `users`.
 
 Dokumen ini menjadi acuan implementasi untuk:
 
@@ -38,7 +38,7 @@ User digunakan untuk:
 - Mengelola akun
 - Mengelola role
 - Menentukan hak akses
-- Audit Activity
+- Audit trail sistem
 
 ---
 
@@ -102,8 +102,6 @@ User
    │
    ├──────── Return (Staff)
    │
-   ├──────── Activity Log
-   │
    └──────── Audit Log
 ```
 
@@ -136,7 +134,7 @@ Admin
 ### Process
 
 - Validasi data.
-- Membuat akun Supabase Auth.
+- Membuat akun Better Auth.
 - Membuat data User.
 - Mengirim email aktivasi (opsional).
 
@@ -187,7 +185,7 @@ Permission
 
 Mengubah password.
 
-Menggunakan Supabase Auth.
+Menggunakan Better Auth.
 
 ---
 
@@ -370,7 +368,7 @@ member
 # Business Rules
 
 - Email harus unik.
-- Password disimpan oleh Supabase Auth.
+- Password disimpan oleh Better Auth.
 - User yang di-soft delete tidak dapat login.
 - Admin tidak dapat menghapus akun sendiri.
 - Minimal harus ada satu Admin aktif di sistem.
@@ -497,8 +495,6 @@ Error
 ```
 users
 
-activity_logs
-
 audit_logs
 
 borrowings
@@ -522,7 +518,7 @@ last_login_at
 
 ---
 
-# Activity Log
+# Audit Log
 
 Catat aktivitas berikut:
 
@@ -540,7 +536,7 @@ Catat aktivitas berikut:
 
 # Security Guidelines
 
-- Authentication menggunakan Supabase Auth.
+- Authentication menggunakan Better Auth.
 - Authorization menggunakan Role-Based Access Control (RBAC).
 - Password tidak pernah disimpan di database aplikasi.
 - Gunakan Row Level Security (RLS) untuk melindungi data pengguna.
@@ -568,7 +564,7 @@ Catat aktivitas berikut:
 Implementasi Users API dianggap selesai apabila:
 
 - CRUD User tersedia.
-- Integrasi dengan Supabase Auth berjalan.
+- Integrasi dengan Better Auth berjalan.
 - Role Management berfungsi.
 - Profile Management tersedia.
 - Password dapat diubah dengan aman.
@@ -576,5 +572,5 @@ Implementasi Users API dianggap selesai apabila:
 - Authorization mengikuti `PERMISSIONS.md`.
 - Response mengikuti `ERRORS.md`.
 - Search, Pagination, Sorting, Filtering, dan Export berfungsi.
-- Activity Log tercatat.
+- Audit Log tercatat.
 - Seluruh implementasi konsisten dengan dokumentasi proyek.

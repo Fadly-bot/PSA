@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Folder ini berisi dokumentasi seluruh **Server Actions** dan **Route Handlers** yang digunakan oleh aplikasi **Perpustakaan Digital**.
+Folder ini berisi dokumentasi seluruh **Server Actions** dan **Route Handlers** yang digunakan oleh aplikasi **TBM Semesta Alam**.
 
 Dokumen pada folder ini menjadi acuan implementasi komunikasi antara frontend, backend, database, dan layanan eksternal.
 
@@ -65,44 +65,48 @@ Validation
 docs/
 └── api/
     ├── README.md
-    ├── auth.md
-    ├── books.md
-    ├── categories.md
-    ├── authors.md
-    ├── publishers.md
-    ├── shelves.md
-    ├── members.md
-    ├── borrowings.md
-    ├── returns.md
-    ├── fines.md
-    ├── dashboard.md
-    ├── reports.md
-    ├── uploads.md
-    ├── users.md
-    └── settings.md
+    ├── Authentication API.md
+    ├── Books API.md
+    ├── Categories API.md
+    ├── Authors API.md
+    ├── Publishers API.md
+    ├── Shelves API.md
+    ├── Members API.md
+    ├── Book Inventories API.md
+    ├── Book Sources API.md
+    ├── Borrowings API.md
+    ├── Returns API.md
+    ├── Fines API.md
+    ├── Dashboard API.md
+    ├── Reports API.md
+    ├── Users API.md
+    ├── Settings API.md
+    └── Audit Logs API.md
 ```
 
 ---
 
 # Module Overview
 
-| Module        | Description                                |
-| ------------- | ------------------------------------------ |
-| auth.md       | Login, logout, register, session, password |
-| books.md          | CRUD buku, cover, inventaris (Book Copies), dan sumber buku |
-| categories.md | CRUD kategori                              |
-| authors.md    | CRUD penulis                               |
-| publishers.md | CRUD penerbit                              |
-| shelves.md    | CRUD rak                                   |
-| members.md    | CRUD anggota                               |
-| borrowings.md | Proses peminjaman buku                     |
-| returns.md    | Proses pengembalian buku                   |
-| fines.md      | Manajemen denda                            |
-| dashboard.md  | Statistik dan dashboard                    |
-| reports.md    | Laporan dan ekspor data                    |
-| uploads.md    | Upload cover buku dan file                 |
-| users.md      | Manajemen user dan role                    |
-| settings.md   | Pengaturan aplikasi                        |
+| Module                        | Description                                              |
+| ----------------------------- | -------------------------------------------------------- |
+| Authentication API.md         | Login, logout, register, session, password               |
+| Books API.md                  | CRUD buku dan cover buku                                 |
+| Book Inventories API.md       | CRUD inventaris fisik buku                               |
+| Book Sources API.md           | CRUD sumber pengadaan inventaris                         |
+| Categories API.md             | CRUD kategori                                            |
+| Authors API.md                | CRUD penulis                                             |
+| Publishers API.md             | CRUD penerbit                                            |
+| Shelves API.md                | CRUD rak                                                 |
+| Members API.md                | CRUD anggota                                             |
+| Borrowings API.md             | Proses peminjaman berdasarkan BookInventory              |
+| Returns API.md                | Proses pengembalian dan denda                             |
+| Fines API.md                  | Manajemen denda                                          |
+| Dashboard API.md              | Statistik dan dashboard                                   |
+| Reports API.md                | Laporan dan ekspor data                                   |
+| Users API.md                  | Manajemen user dan role                                   |
+| Settings API.md               | Pengaturan aplikasi                                      |
+| Audit Logs API.md             | Audit trail sistem                                       |
 
 ---
 

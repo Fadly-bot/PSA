@@ -250,7 +250,7 @@ Administration
 * Roles
 * Reports
 * Settings
-* Activity Logs
+* Audit Logs
 
 ---
 

@@ -90,7 +90,7 @@ Update Borrowing Status
 
 ↓
 
-Create Activity Log
+Create Audit Log
 
 ↓
 
@@ -571,7 +571,7 @@ Create Fine (Optional)
 
 ↓
 
-Create Activity Log
+Create Audit Log
 
 ↓
 
@@ -586,7 +586,7 @@ Rollback
 
 ---
 
-# Activity Log
+# Audit Log
 
 Catat aktivitas berikut:
 

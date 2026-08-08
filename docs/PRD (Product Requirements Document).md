@@ -660,11 +660,11 @@ Setiap baris merujuk pada satu Inventaris Buku (eksemplar fisik) yang dipinjam.
 
 ---
 
-## Activity Logs
+## Audit Logs
 
 * id
 * user_id
-* activity
+* action
 * created_at
 
 ---

@@ -457,10 +457,10 @@ Menampilkan seluruh inventaris (eksemplar) dari semua judul. Mendukung pencarian
 
 ---
 
-## Activity Logs
+## Audit Logs
 
 ```text
-/dashboard/activity-logs
+/dashboard/audit-logs
 ```
 
 ---
@@ -756,7 +756,7 @@ Tambahan:
 * Roles
 * Settings
 * Reports
-* Activity Logs
+* Audit Logs
 
 ---
 

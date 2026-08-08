@@ -397,7 +397,7 @@ created_at
 
 ---
 
-# Activity Log
+# Audit Log
 
 Catat aktivitas berikut:
 

@@ -6,7 +6,7 @@ Dokumen ini mendefinisikan seluruh Server Actions, Business Rules, Authorization
 
 Audit Log digunakan untuk mencatat seluruh aktivitas penting yang terjadi di dalam sistem sebagai bagian dari **keamanan, pelacakan aktivitas (traceability), debugging, dan kepatuhan (audit trail)**.
 
-Berbeda dengan **Activity Log**, Audit Log bersifat **immutable (tidak dapat diubah)** dan hanya dapat dilihat oleh Administrator.
+Berbeda dengan sistem operasional biasa, Audit Log bersifat **immutable (tidak dapat diubah)** dan hanya dapat dilihat oleh Administrator.
 
 Dokumen ini menjadi acuan implementasi untuk:
 

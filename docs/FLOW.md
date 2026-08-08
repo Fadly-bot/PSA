@@ -980,7 +980,7 @@ Tampilkan nominal denda
 
 ---
 
-# Activity Log Flow
+# Audit Log Flow
 
 User melakukan aksi
 
@@ -997,7 +997,7 @@ Catat
 
 ↓
 
-Simpan ke activity_logs
+Simpan ke audit_logs
 
 ---
 

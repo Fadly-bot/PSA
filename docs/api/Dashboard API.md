@@ -725,7 +725,7 @@ publishers
 
 ---
 
-# Activity Log
+# Audit Log
 
 Dashboard mencatat:
 

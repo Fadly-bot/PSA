@@ -98,7 +98,7 @@ Plural
 | returns | Return headers |
 | return_details | Return items |
 | fines | Fines |
-| activity_logs | Activity logs |
+| audit_logs | Audit logs |
 
 ---
 

@@ -1,0 +1,14 @@
+node_modules/
+.env
+.env.local
+.env*.local
+*.tsbuildinfo
+*.canvas
+.next/
+coverage
+dist
+.drizzle
+npm-debug.log*
+.DS_Store
+
+.obsidian/

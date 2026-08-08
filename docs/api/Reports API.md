@@ -685,7 +685,7 @@ users
 
 ---
 
-# Activity Log
+# Audit Log
 
 Catat aktivitas berikut:
 
@@ -726,6 +726,6 @@ Implementasi Reports API dianggap selesai apabila:
 - Seluruh laporan mengambil data yang konsisten dari database.
 - Authorization mengikuti `PERMISSIONS.md`.
 - Response mengikuti `ERRORS.md`.
-- Activity Log tercatat.
+- Audit Log tercatat.
 - Performa tetap baik untuk dataset besar.
 - Seluruh implementasi konsisten dengan dokumentasi proyek.
