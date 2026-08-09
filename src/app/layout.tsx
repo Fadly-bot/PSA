@@ -6,10 +6,11 @@ import './globals.css';
  * Set NEXT_PUBLIC_SITE_URL (or BETTER_AUTH_URL) in the environment.
  * Never hardcode localhost as the production canonical URL.
  */
-export const SITE_URL =
+export const SITE_URL = (
   process.env.NEXT_PUBLIC_SITE_URL ??
   process.env.BETTER_AUTH_URL ??
-  'http://localhost:3000';
+  'http://localhost:3000'
+).replace(/\/+$/, '');
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
