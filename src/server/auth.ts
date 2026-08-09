@@ -20,6 +20,17 @@ import * as schema from '@/db/schema';
 export const auth = betterAuth({
   baseURL: process.env.BETTER_AUTH_URL ?? 'http://localhost:3000',
   secret: process.env.BETTER_AUTH_SECRET ?? 'dev-insecure-secret-change-me',
+  /**
+   * Origins allowed past Better Auth's CSRF origin-check. The baseURL origin
+   * is trusted automatically; add local dev and Vercel preview domains so
+   * they are not rejected (previously the origin check returned 403 and the
+   * browser surfaced this as "Failed to fetch").
+   */
+  trustedOrigins: [
+    'http://localhost:3000',
+    'https://tbmsemesta-alam.vercel.app',
+    'https://*.vercel.app',
+  ],
   database: drizzleAdapter(db, {
     provider: 'pg',
     schema: {

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { authClient } from '@/lib/auth-client';
+import { authClient, getAuthErrorMessage } from '@/lib/auth-client';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -19,13 +19,13 @@ export default function RegisterPage() {
     try {
       const res = await authClient.signUp.email({ name, email, password });
       if (res.error) {
-        setError(res.error.message ?? 'Gagal daftar');
+        setError(getAuthErrorMessage(res.error));
       } else {
         router.push('/dashboard');
         router.refresh();
       }
-    } catch (err: any) {
-      setError(err?.message ?? 'Terjadi kesalahan');
+    } catch (err) {
+      setError(getAuthErrorMessage(err));
     } finally {
       setLoading(false);
     }

@@ -193,9 +193,11 @@ export const auditLogs = pgTable('audit_logs', {
  * Columns are snake_case so they map to Better Auth's default field mapping
  * (id, user_id, token, expires_at, ip_address, user_agent, created_at, updated_at).
  * `generateId: 'uuid'` is configured in `src/server/auth.ts`, so `id` is a UUID.
+ * `id` uses `defaultRandom()` (like `users`) because Better Auth inserts
+ * with `id = DEFAULT` and the database must generate it.
  */
 export const sessions = pgTable('sessions', {
-  id: uuid('id').primaryKey(),
+  id: uuid('id').primaryKey().defaultRandom(),
   userId: uuid('user_id')
     .notNull()
     .references(() => users.id, { onDelete: 'cascade' }),
@@ -211,9 +213,11 @@ export const sessions = pgTable('sessions', {
  * Better Auth — `account` model (OAuth providers + email/password credential).
  * No `secret` column: Better Auth 1.6.x stores provider credentials in
  * access/refresh/id_token directly (matches the core account schema).
+ * `id` uses `defaultRandom()` (like `users`) — Better Auth inserts with
+ * `id = DEFAULT`, so the database must generate it.
  */
 export const accounts = pgTable('accounts', {
-  id: uuid('id').primaryKey(),
+  id: uuid('id').primaryKey().defaultRandom(),
   userId: uuid('user_id')
     .notNull()
     .references(() => users.id, { onDelete: 'cascade' }),
@@ -232,9 +236,11 @@ export const accounts = pgTable('accounts', {
 
 /**
  * Better Auth — `verification` model (email verification + password reset tokens).
+ * `id` uses `defaultRandom()` (like `users`) — Better Auth inserts with
+ * `id = DEFAULT`, so the database must generate it.
  */
 export const verifications = pgTable('verifications', {
-  id: uuid('id').primaryKey(),
+  id: uuid('id').primaryKey().defaultRandom(),
   identifier: text('identifier').notNull(),
   value: text('value').notNull(),
   expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),

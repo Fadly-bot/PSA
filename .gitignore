@@ -12,5 +12,6 @@ dist
 .drizzle
 npm-debug.log*
 .DS_Store
+supabase/.temp/
 
 .obsidian/

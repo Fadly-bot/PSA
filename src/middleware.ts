@@ -88,6 +88,9 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
+  // postgres.js cannot open TCP connections on the Edge runtime, so the
+  // middleware must run on Node.js to query the database (session + role).
+  runtime: 'nodejs',
   matcher: [
     '/dashboard/:path*',
     '/admin/:path*',

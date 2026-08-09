@@ -11,7 +11,7 @@
     "lint": "eslint . --ext .ts,.tsx --max-warnings 0",
     "admin:create": "node --env-file-if-exists=.env.local --import tsx scripts/create-admin.ts",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "drizzle-kit migrate",
+    "db:migrate": "node --env-file-if-exists=.env.local ./node_modules/drizzle-kit/bin.cjs migrate",
     "db:check": "drizzle-kit check",
     "db:check-env": "node --env-file-if-exists=.env.local --import tsx scripts/check-env.ts",
     "db:studio": "drizzle-kit studio"
