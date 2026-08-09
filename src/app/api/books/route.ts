@@ -278,7 +278,9 @@ export async function POST(request: Request) {
       status: data.status ?? 'active',
     };
     // Only set keys present in the payload so nulls aren't forced.
+    // `slug` is always generated server-side, so it must never be dropped.
     for (const key of BOOK_FIELDS) {
+      if (key === 'slug') continue;
       if (!(key in (body ?? {}))) delete (values as Record<string, unknown>)[key];
     }
 

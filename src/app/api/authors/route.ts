@@ -23,7 +23,7 @@ export async function GET(request: Request) {
       conditions.push(sql`${authors.name} ILIKE ${`%${q}%`}`);
     }
 
-    const whereClause = conditions.length > 0 ? sql`WHERE ${sql.join(conditions, sql` AND `)}` : sql``;
+    const whereClause = conditions.length > 0 ? sql`${sql.join(conditions, sql` AND `)}` : undefined;
 
     const orderByMap: Record<string, any> = {
       name: desc(authors.name),

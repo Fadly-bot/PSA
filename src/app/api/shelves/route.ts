@@ -24,7 +24,7 @@ export async function GET(request: Request) {
       );
     }
 
-    const whereClause = conditions.length > 0 ? sql`WHERE ${sql.join(conditions, sql` AND `)}` : sql``;
+    const whereClause = conditions.length > 0 ? sql`${sql.join(conditions, sql` AND `)}` : undefined;
 
     const orderByMap: Record<string, any> = {
       code: desc(shelves.code),
