@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 
 export default function NewBookSourcePage() {
@@ -33,7 +33,7 @@ export default function NewBookSourcePage() {
 
   return (
     <div style={{ maxWidth: 720 }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+      <div className="page-header">
         <h1 style={{ fontSize: 22, fontWeight: 700, margin: 0 }}>Tambah Sumber Buku</h1>
         <Link href="/dashboard/book-sources" className="btn secondary">Kembali</Link>
       </div>

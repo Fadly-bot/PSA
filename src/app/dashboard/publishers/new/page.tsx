@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 
 export default function NewPublisherPage() {
@@ -36,7 +36,7 @@ export default function NewPublisherPage() {
 
   return (
     <div style={{ maxWidth: 720 }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+      <div className="page-header">
         <h1 style={{ fontSize: 22, fontWeight: 700, margin: 0 }}>Tambah Penerbit</h1>
         <Link href="/dashboard/publishers" className="btn secondary">Kembali</Link>
       </div>
@@ -54,7 +54,7 @@ export default function NewPublisherPage() {
           <textarea value={address} onChange={(e) => setAddress(e.target.value)} maxLength={500} rows={3} style={{ width: '100%', padding: '10px 12px', border: '1px solid var(--border)', borderRadius: 6 }} />
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+        <div className="form-grid form-grid-2">
           <div>
             <label style={{ display: 'block', fontSize: 13, fontWeight: 600, marginBottom: 6 }}>Email</label>
             <input value={email} onChange={(e) => setEmail(e.target.value)} style={{ width: '100%', padding: '10px 12px', border: '1px solid var(--border)', borderRadius: 6 }} />

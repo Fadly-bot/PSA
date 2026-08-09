@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/db/index';
 import { shelves } from '@/db/schema';
-import { eq, desc, sql } from 'drizzle-orm';
+import { desc, sql } from 'drizzle-orm';
 import { getCurrentUser, hasPermission } from '@/server/auth-utils';
+import { createAuditLog } from '@/server/audit';
 
 export const runtime = 'nodejs';
 
@@ -13,7 +14,6 @@ export async function GET(request: Request) {
     const page = Math.max(1, Number(searchParams.get('page') ?? '1'));
     const limit = Math.max(1, Math.min(100, Number(searchParams.get('limit') ?? '10')));
     const sortBy = searchParams.get('sortBy') ?? 'createdAt';
-    const sortOrder = searchParams.get('sortOrder') === 'asc' ? 'asc' : 'desc';
 
     const offset = (page - 1) * limit;
 
@@ -95,6 +95,13 @@ export async function POST(request: Request) {
       description: description ?? undefined,
       floor,
     }).returning();
+
+    await createAuditLog({
+      userId: user.id,
+      action: 'CREATE',
+      module: 'SHELVES',
+      description: `Tambah rak "${code} - ${name}"`,
+    });
 
     return NextResponse.json(row, { status: 201 });
   } catch (error: any) {

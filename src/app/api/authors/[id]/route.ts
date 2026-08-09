@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/db/index';
 import { authors, books } from '@/db/schema';
-import { eq, and, sql } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import { getCurrentUser, hasPermission } from '@/server/auth-utils';
+import { createAuditLog } from '@/server/audit';
 
 export const runtime = 'nodejs';
 
@@ -62,6 +63,13 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       updatedAt: new Date(),
     }).where(eq(authors.id, id)).returning();
 
+    await createAuditLog({
+      userId: user.id,
+      action: 'UPDATE',
+      module: 'AUTHORS',
+      description: `Edit penulis "${name}"`,
+    });
+
     return NextResponse.json(row);
   } catch (error: any) {
     console.error('PATCH /api/authors/:id error', error);
@@ -94,6 +102,12 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
     }
 
     await db.delete(authors).where(eq(authors.id, id));
+    await createAuditLog({
+      userId: user.id,
+      action: 'DELETE',
+      module: 'AUTHORS',
+      description: `Hapus penulis "${existing.name}"`,
+    });
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('DELETE /api/authors/:id error', error);

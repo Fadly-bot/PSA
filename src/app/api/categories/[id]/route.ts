@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/db/index';
 import { categories, books } from '@/db/schema';
-import { eq, and, sql } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import { getCurrentUser, hasPermission } from '@/server/auth-utils';
+import { createAuditLog } from '@/server/audit';
 
 export const runtime = 'nodejs';
 
@@ -53,6 +54,13 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       updatedAt: new Date(),
     }).where(eq(categories.id, id)).returning();
 
+    await createAuditLog({
+      userId: user.id,
+      action: 'UPDATE',
+      module: 'CATEGORIES',
+      description: `Edit kategori "${name}"`,
+    });
+
     return NextResponse.json(row);
   } catch (error: any) {
     console.error('PATCH /api/categories/:id error', error);
@@ -85,6 +93,12 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
     }
 
     await db.delete(categories).where(eq(categories.id, id));
+    await createAuditLog({
+      userId: user.id,
+      action: 'DELETE',
+      module: 'CATEGORIES',
+      description: `Hapus kategori "${existing.name}"`,
+    });
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('DELETE /api/categories/:id error', error);

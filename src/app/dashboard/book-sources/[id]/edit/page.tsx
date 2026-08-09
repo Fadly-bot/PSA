@@ -73,7 +73,7 @@ export default function EditBookSourcePage({ params }: { params: { id: string } 
 
   return (
     <div style={{ maxWidth: 720 }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+      <div className="page-header">
         <h1 style={{ fontSize: 22, fontWeight: 700, margin: 0 }}>Edit Sumber Buku</h1>
         <Link href="/dashboard/book-sources" className="btn secondary">Kembali</Link>
       </div>

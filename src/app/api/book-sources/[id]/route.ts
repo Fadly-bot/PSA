@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/db/index';
 import { bookSources, bookInventories } from '@/db/schema';
-import { eq, and, sql } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import { getCurrentUser, hasPermission } from '@/server/auth-utils';
+import { createAuditLog } from '@/server/audit';
 
 export const runtime = 'nodejs';
 
@@ -53,6 +54,13 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       updatedAt: new Date(),
     }).where(eq(bookSources.id, id)).returning();
 
+    await createAuditLog({
+      userId: user.id,
+      action: 'UPDATE',
+      module: 'BOOK_SOURCES',
+      description: `Edit sumber buku "${name}"`,
+    });
+
     return NextResponse.json(row);
   } catch (error: any) {
     console.error('PATCH /api/book-sources/:id error', error);
@@ -85,6 +93,12 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
     }
 
     await db.delete(bookSources).where(eq(bookSources.id, id));
+    await createAuditLog({
+      userId: user.id,
+      action: 'DELETE',
+      module: 'BOOK_SOURCES',
+      description: `Hapus sumber buku "${existing.name}"`,
+    });
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('DELETE /api/book-sources/:id error', error);

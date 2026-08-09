@@ -21,7 +21,10 @@ export const users = pgTable('users', {
   name: varchar('name', { length: 150 }).notNull(),
   email: varchar('email').notNull().unique(),
   emailVerified: boolean('email_verified').notNull().default(false),
-  passwordHash: text('password_hash').notNull(),
+  // Password hashes are stored by Better Auth in `accounts.password`.
+  // This column is kept for compatibility and is nullable (Better Auth
+  // does not write to it).
+  passwordHash: text('password_hash'),
   avatarUrl: text('avatar_url'),
   status: userStatusEnum('status').notNull().default('active'),
   lastLogin: timestamp('last_login', { withTimezone: true }),
@@ -159,6 +162,19 @@ export const fines = pgTable('fines', {
   paidAt: timestamp('paid_at', { withTimezone: true }),
   status: fineStatusEnum('status').notNull().default('unpaid'),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const settings = pgTable('settings', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  key: varchar('key').notNull().unique(),
+  category: varchar('category', { length: 50 }).notNull().default('general'),
+  value: text('value'),
+  description: text('description'),
+  isPublic: boolean('is_public').notNull().default(false),
+  createdBy: uuid('created_by').references(() => users.id, { onDelete: 'restrict' }),
+  updatedBy: uuid('updated_by').references(() => users.id, { onDelete: 'restrict' }),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
 });
 
 export const auditLogs = pgTable('audit_logs', {

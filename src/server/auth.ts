@@ -49,6 +49,60 @@ export const auth = betterAuth({
     expiresIn: 60 * 60 * 24 * 7, // 7 days, in seconds
     updateAge: 60 * 60 * 24, // 1 day, in seconds
   },
+  databaseHooks: {
+    user: {
+      create: {
+        after: async (user) => {
+          // Registration flow (AUTH.md / FLOW.md): a new user that registers
+          // through the public form becomes a library Member automatically.
+          // We only auto-create a member for self-registered users (no role
+          // assigned yet). Staff/admin-created users are handled explicitly
+          // by the members/users APIs.
+          try {
+            const rolesModule = await import('@/db/schema');
+            const { members, roles, users } = rolesModule;
+            const { eq } = await import('drizzle-orm');
+            const { db } = await import('@/db/index');
+            const { generateMemberCode } = await import('@/lib/utils');
+
+            // Idempotent: skip when the user already has a member profile
+            // (e.g. staff/admin created this user explicitly).
+            const [existingMember] = await db
+              .select({ id: members.id })
+              .from(members)
+              .where(eq(members.userId, user.id))
+              .limit(1);
+            if (!existingMember) {
+              const [memberRole] = await db
+                .select({ id: roles.id })
+                .from(roles)
+                .where(eq(roles.name, 'member'))
+                .limit(1);
+
+              const roleId = memberRole?.id ?? null;
+              // Assign default member role when the role exists.
+              if (roleId) {
+                await db
+                  .update(users)
+                  .set({ roleId })
+                  .where(eq(users.id, user.id));
+              }
+
+              // Create the member profile (1:1 with the user).
+              await db.insert(members).values({
+                userId: user.id,
+                memberCode: generateMemberCode(),
+                joinDate: new Date().toISOString().slice(0, 10),
+                status: true,
+              });
+            }
+          } catch (error) {
+            console.error('[better-auth] failed to create member profile', error);
+          }
+        },
+      },
+    },
+  },
 });
 
 export type Auth = typeof auth;

@@ -96,7 +96,107 @@ a:hover { text-decoration: underline; }
 .grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .grid-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 
+/* Mobile top navigation bar (dashboard) — replaces the hidden sidebar. */
+.mobile-nav {
+  display: none;
+  align-items: center;
+  gap: 4px;
+  overflow-x: auto;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  -webkit-overflow-scrolling: touch;
+}
+.mobile-nav a {
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #334155;
+  text-decoration: none;
+}
+.mobile-nav a:hover { background: #f1f5f9; }
+.mobile-nav a.active { background: #eef2ff; color: #1e3a8a; }
+
+/* Public book detail: cover + info side by side on desktop, stacked on mobile. */
+.detail-grid {
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr);
+  gap: 28px;
+  align-items: start;
+}
+@media (max-width: 640px) {
+  .detail-grid { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* Official TBM Semesta Alam logo in navbars (horizontal lockup, height-driven). */
+.brand-logo {
+  display: block;
+  height: 40px;
+  width: auto;
+  object-fit: contain;
+}
+@media (max-width: 640px) {
+  .brand-logo { height: 32px; }
+}
+
+/* Responsive page header (title + actions) */
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+/* Dashboard main content area */
+.dashboard-main {
+  flex: 1;
+  padding: 24px;
+  max-width: 100%;
+  min-width: 0;
+}
+@media (max-width: 640px) {
+  .dashboard-main { padding: 14px; }
+}
+
+/* Responsive form grids — collapse to one column on phones. */
+.form-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: 1fr;
+}
+.form-grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.form-grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.form-grid-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.form-grid-cover { grid-template-columns: 200px 1fr; }
+.form-grid-1-2 { grid-template-columns: 1fr 2fr; }
+
+@media (max-width: 640px) {
+  .form-grid-2, .form-grid-3, .form-grid-4, .form-grid-cover, .form-grid-1-2 { grid-template-columns: 1fr; }
+}
+@media (min-width: 641px) and (max-width: 900px) {
+  .form-grid-3, .form-grid-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 1024px) {
+  .grid-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
 @media (max-width: 768px) {
-  .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+  /* 3-col grids become 2-col on tablets; wide tables scroll horizontally. */
+  .grid-3 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .sidebar { display: none; }
+  .mobile-nav { display: flex; }
+  .table { min-width: 640px; }
+}
+
+@media (max-width: 640px) {
+  /* Everything stacks to one column on phones. */
+  .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+  .container { padding: 16px; }
 }

@@ -1,9 +1,64 @@
 import type { Metadata } from 'next';
 import './globals.css';
 
+/**
+ * Production base URL for canonical links / sitemap / robots.
+ * Set NEXT_PUBLIC_SITE_URL (or BETTER_AUTH_URL) in the environment.
+ * Never hardcode localhost as the production canonical URL.
+ */
+export const SITE_URL =
+  process.env.NEXT_PUBLIC_SITE_URL ??
+  process.env.BETTER_AUTH_URL ??
+  'http://localhost:3000';
+
 export const metadata: Metadata = {
-  title: 'TBM Semesta Alam',
-  description: 'Sistem manajemen perpustakaan TBM Semesta Alam',
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: 'TBM Semesta Alam',
+    template: '%s | TBM Semesta Alam',
+  },
+  description:
+    'Sistem Informasi Perpustakaan Taman Bacaan Masyarakat (TBM) Semesta Alam — kelola koleksi buku, anggota, peminjaman, pengembalian, denda, laporan, dan administrasi secara digital.',
+  keywords: [
+    'TBM Semesta Alam',
+    'Taman Bacaan Masyarakat',
+    'perpustakaan digital',
+    'katalog buku',
+    'peminjaman buku',
+    'koleksi buku',
+  ],
+  authors: [{ name: 'TBM Semesta Alam' }],
+  icons: {
+    icon: '/icon.png',
+  },
+  openGraph: {
+    type: 'website',
+    locale: 'id_ID',
+    url: SITE_URL,
+    siteName: 'TBM Semesta Alam',
+    title: 'TBM Semesta Alam',
+    description:
+      'Sistem Informasi Perpustakaan Taman Bacaan Masyarakat (TBM) Semesta Alam — kelola koleksi buku, anggota, peminjaman, pengembalian, denda, laporan, dan administrasi secara digital.',
+    images: [
+      {
+        url: '/logo-tbm-semesta-alam.png',
+        width: 1254,
+        height: 1254,
+        alt: 'Logo TBM Semesta Alam',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'TBM Semesta Alam',
+    description:
+      'Sistem Informasi Perpustakaan Taman Bacaan Masyarakat (TBM) Semesta Alam.',
+    images: ['/logo-tbm-semesta-alam.png'],
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

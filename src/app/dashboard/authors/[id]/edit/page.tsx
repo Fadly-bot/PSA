@@ -76,7 +76,7 @@ export default function EditAuthorPage({ params }: { params: { id: string } }) {
 
   return (
     <div style={{ maxWidth: 720 }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+      <div className="page-header">
         <h1 style={{ fontSize: 22, fontWeight: 700, margin: 0 }}>Edit Penulis</h1>
         <Link href="/dashboard/authors" className="btn secondary">Kembali</Link>
       </div>

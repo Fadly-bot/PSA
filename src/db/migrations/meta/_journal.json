@@ -15,6 +15,13 @@
       "when": 1786197103901,
       "tag": "0001_plain_virginia_dare",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1786244407763,
+      "tag": "0002_gifted_shotgun",
+      "breakpoints": true
     }
   ]
 }

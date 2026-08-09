@@ -11,10 +11,38 @@
             "id": "de6c89d97a34a3b6",
             "type": "leaf",
             "state": {
-              "type": "empty",
+              "type": "graph",
               "state": {},
+              "icon": "lucide-git-fork",
+              "title": "Graph view"
+            }
+          },
+          {
+            "id": "def456c5dedbb6f6",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "for prompt.md",
+                "mode": "source",
+                "source": false
+              },
               "icon": "lucide-file",
-              "title": "New tab"
+              "title": "for prompt"
+            }
+          },
+          {
+            "id": "cc68c3dc472f8586",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "for prompt.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "for prompt"
             }
           }
         ]
@@ -95,6 +123,7 @@
             "state": {
               "type": "backlink",
               "state": {
+                "file": "Untitled.canvas",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -113,6 +142,7 @@
             "state": {
               "type": "outgoing-link",
               "state": {
+                "file": "Untitled.canvas",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               },
@@ -155,7 +185,7 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "2026-08-07.md",
+                "file": "Untitled.canvas",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
@@ -179,33 +209,58 @@
       "daily-notes:Open today's daily note": false,
       "templates:Insert template": false,
       "command-palette:Open command palette": false,
-      "bases:Create new base": false
+      "bases:Create new base": false,
+      "remotely-save:Remotely Save": false,
+      "audio-recorder:Start/stop recording": false,
+      "random-note:Open random note": false,
+      "zk-prefixer:Create new unique note": false,
+      "workspaces:Manage workspace layouts": false
     }
   },
-  "active": "cb66379904b45724",
+  "active": "de6c89d97a34a3b6",
   "lastOpenFiles": [
-    "docs/api/Audit Logs API.md",
-    "docs/api/Settings API.md",
-    "docs/api/Users API.md",
-    "docs/api/Dashboard API.md",
-    "docs/api/Reports API.md",
-    "docs/api/Fines API.md",
-    "docs/api/Returns API.md",
-    "docs/api/Book Sources API.md",
-    "docs/api/Book Inventories API.md",
-    "docs/api/Borrowings API.md",
-    "docs/api/Shelves API.md",
-    "docs/api/Publishers API.md",
-    "docs/api/Authors API.md",
-    "docs/Architecture Decisions (ADR).md",
-    "docs/Project Conventions.md",
-    "docs/Permissions.md",
-    "docs/Error Codes.md",
-    "docs/Naming Convention.md",
-    "Untitled.base",
-    "2026-08-07.md",
-    "Untitled 1.canvas",
+    "for prompt.md",
+    "server.log",
+    "public/logo-tbm-semesta-alam-nav.png",
+    "src/app/icon.png",
+    "public/logo-tbm-semesta-alam.png",
+    "public",
+    "src/app/dashboard/authors/new/sedTQxvUY",
+    "docs/ADMIN_BOOTSTRAP.md",
+    "scripts/create-admin.ts",
+    "scripts",
+    "ChatGPT Image 9 Agu 2026, 10.33.54.png",
+    "dbcheck.cjs",
+    "dbcheck.js",
+    "Untitled.md",
+    "eslint-out.json",
+    "node_modules/es-abstract/2025/tables/typed-array-objects.js",
+    "node_modules/es-abstract/2025/tables",
+    "node_modules/es-abstract/README.md",
+    "node_modules/es-abstract/CHANGELOG.md",
+    "node_modules/eslint-plugin-jsx-a11y/CHANGELOG.md",
+    "node_modules/eslint-plugin-import/CHANGELOG.md",
+    "node_modules/node-exports-info/CHANGELOG.md",
+    "node_modules/object.values/README.md",
+    "node_modules/object.values/CHANGELOG.md",
+    "node_modules/array.prototype.findlastindex/README.md",
+    "node_modules/array.prototype.flat/README.md",
+    "node_modules/object.fromentries/README.md",
+    "node_modules/array.prototype.flatmap/README.md",
+    "node_modules/object.groupby/README.md",
+    "node_modules/object.fromentries/CHANGELOG.md",
+    "node_modules/array.prototype.findlastindex/CHANGELOG.md",
+    "node_modules/array.prototype.flat/CHANGELOG.md",
+    "node_modules/es-errors/README.md",
+    "node_modules/call-bind-apply-helpers/README.md",
+    "node_modules/call-bind-apply-helpers/CHANGELOG.md",
+    "node_modules/braces/README.md",
+    "node_modules/fastq/SECURITY.md",
+    "node_modules/@next/eslint-plugin-next/node_modules/@eslint-community/eslint-utils/README.md",
+    "node_modules/reusify/SECURITY.md",
+    "node_modules/@supabase/phoenix/priv/static/phoenix.png",
+    "node_modules/@supabase/phoenix/priv/static/phoenix-orange.png",
     "Untitled.canvas",
-    "docs/AGENT.md"
+    "Untitled 1.canvas"
   ]
 }

@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/db/index';
 import { shelves, bookInventories } from '@/db/schema';
-import { eq, and, sql } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import { getCurrentUser, hasPermission } from '@/server/auth-utils';
+import { createAuditLog } from '@/server/audit';
 
 export const runtime = 'nodejs';
 
@@ -68,6 +69,13 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       updatedAt: new Date(),
     }).where(eq(shelves.id, id)).returning();
 
+    await createAuditLog({
+      userId: user.id,
+      action: 'UPDATE',
+      module: 'SHELVES',
+      description: `Edit rak "${code} - ${name}"`,
+    });
+
     return NextResponse.json(row);
   } catch (error: any) {
     console.error('PATCH /api/shelves/:id error', error);
@@ -100,6 +108,12 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
     }
 
     await db.delete(shelves).where(eq(shelves.id, id));
+    await createAuditLog({
+      userId: user.id,
+      action: 'DELETE',
+      module: 'SHELVES',
+      description: `Hapus rak "${existing.code} - ${existing.name}"`,
+    });
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('DELETE /api/shelves/:id error', error);

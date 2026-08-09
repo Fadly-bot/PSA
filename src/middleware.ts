@@ -13,7 +13,25 @@ const PROTECTED_PATHS = ['/dashboard', '/admin', '/settings', '/profile'];
 /**
  * Paths that require staff/admin role (not accessible by member).
  */
-const STAFF_ONLY_PATHS = ['/dashboard/shelves', '/dashboard/book-sources'];
+const STAFF_ONLY_PATHS = [
+  '/dashboard/books',
+  '/dashboard/inventories',
+  '/dashboard/book-sources',
+  '/dashboard/categories',
+  '/dashboard/authors',
+  '/dashboard/publishers',
+  '/dashboard/shelves',
+  '/dashboard/members',
+  '/dashboard/borrowings',
+  '/dashboard/returns',
+  '/dashboard/fines',
+  '/dashboard/reports',
+];
+
+/**
+ * Paths that require admin role only.
+ */
+const ADMIN_ONLY_PATHS = ['/dashboard/settings', '/dashboard/audit-logs', '/dashboard/users', '/dashboard/roles'];
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -36,10 +54,13 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
+  const isAdminOnly = ADMIN_ONLY_PATHS.some((prefix) =>
+    pathname.startsWith(prefix),
+  );
   const isStaffOnly = STAFF_ONLY_PATHS.some((prefix) =>
     pathname.startsWith(prefix),
   );
-  if (isStaffOnly) {
+  if (isAdminOnly || isStaffOnly) {
     const [userRow] = await db
       .select({ roleName: roles.name })
       .from(users)
@@ -48,7 +69,15 @@ export async function middleware(request: NextRequest) {
       .limit(1);
 
     const roleName = userRow?.roleName;
-    if (roleName !== 'staff' && roleName !== 'admin') {
+    const isAdmin = roleName === 'admin';
+    const isStaff = isAdmin || roleName === 'staff';
+
+    if (isAdminOnly && !isAdmin) {
+      const url = request.nextUrl.clone();
+      url.pathname = '/dashboard';
+      return NextResponse.redirect(url);
+    }
+    if (isStaffOnly && !isStaff) {
       const url = request.nextUrl.clone();
       url.pathname = '/dashboard';
       return NextResponse.redirect(url);

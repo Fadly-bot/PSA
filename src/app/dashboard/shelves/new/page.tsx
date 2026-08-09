@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 
 export default function NewShelfPage() {
@@ -37,7 +37,7 @@ export default function NewShelfPage() {
 
   return (
     <div style={{ maxWidth: 720 }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+      <div className="page-header">
         <h1 style={{ fontSize: 22, fontWeight: 700, margin: 0 }}>Tambah Rak</h1>
         <Link href="/dashboard/shelves" className="btn secondary">Kembali</Link>
       </div>
@@ -45,7 +45,7 @@ export default function NewShelfPage() {
       <form onSubmit={onSubmit} className="card" style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
         {error && <div style={{ color: 'crimson' }}>{error}</div>}
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 12 }}>
+        <div className="form-grid form-grid-1-2">
           <div>
             <label style={{ display: 'block', fontSize: 13, fontWeight: 600, marginBottom: 6 }}>Kode *</label>
             <input value={code} onChange={(e) => setCode(e.target.value)} required maxLength={30} style={{ width: '100%', padding: '10px 12px', border: '1px solid var(--border)', borderRadius: 6 }} />

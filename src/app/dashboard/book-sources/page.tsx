@@ -72,7 +72,7 @@ export default function BookSourcesPage() {
 
   return (
     <div>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+      <div className="page-header">
         <div>
           <h1 style={{ fontSize: 22, fontWeight: 700, margin: 0 }}>Sumber Buku</h1>
           <p style={{ margin: '4px 0 0', color: 'var(--muted)', fontSize: 13 }}>Total {total} data</p>
@@ -90,7 +90,7 @@ export default function BookSourcesPage() {
             onKeyDown={(e) => {
               if (e.key === 'Enter') onSearch((e.target as HTMLInputElement).value);
             }}
-            style={{ padding: '8px 10px', border: '1px solid var(--border)', borderRadius: 6, minWidth: 220 }}
+            style={{ padding: '8px 10px', border: '1px solid var(--border)', borderRadius: 6, minWidth: 240, flex: 1 }}
           />
         </div>
 
@@ -131,7 +131,7 @@ export default function BookSourcesPage() {
         )}
 
         {totalPages > 1 && (
-          <div style={{ padding: 12, display: 'flex', gap: 8, alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ padding: 12, display: 'flex', gap: 8, alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap' }}>
             <span style={{ color: 'var(--muted)', fontSize: 13 }}>Halaman {page} dari {totalPages}</span>
             <div style={{ display: 'flex', gap: 8 }}>
               <button className="btn secondary" disabled={page <= 1} onClick={() => load(page - 1, q)}>Sebelum</button>
