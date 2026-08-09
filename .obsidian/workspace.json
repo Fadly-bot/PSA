@@ -45,7 +45,8 @@
               "title": "for prompt"
             }
           }
-        ]
+        ],
+        "currentTab": 1
       }
     ],
     "direction": "vertical"
@@ -217,7 +218,7 @@
       "workspaces:Manage workspace layouts": false
     }
   },
-  "active": "de6c89d97a34a3b6",
+  "active": "def456c5dedbb6f6",
   "lastOpenFiles": [
     "for prompt.md",
     "server.log",

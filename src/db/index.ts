@@ -3,7 +3,7 @@ import postgres from 'postgres';
 import * as schema from './schema';
 import * as relations from './relations';
 
-const connectionString = process.env.DATABASE_URL ?? 'postgresql://postgres:postgres@localhost:5432/tbm_semesta_alam';
+const connectionString = process.env.DATABASE_URL ?? 'postgresql://postgres:[@-9bY6eTiaTuXr]@db.vbhudpckajgfnqbyurdk.supabase.co:5432/postgres';
 
 export const client = postgres(connectionString);
 export const db = drizzle(client, { schema: { ...schema, ...relations } });
