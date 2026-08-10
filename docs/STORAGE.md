@@ -48,6 +48,32 @@ Isi:
 
 * Cover Buku
 
+## Setup Bucket (Wajib Sekali)
+
+Bucket `book-covers` **harus ada** di Supabase Storage sebelum upload cover bisa bekerja.
+
+Jika bucket belum ada, upload akan gagal dengan error:
+
+```text
+COVER_UPLOAD_FAILED: Gagal mengunggah cover.
+```
+
+(root cause: `storage.buckets` ber-RLS tanpa policy → Storage API menolak semua INSERT dengan `new row violates row-level security policy`).
+
+Jalankan setup satu kali terhadap database target (local/preview/production):
+
+```bash
+node --env-file-if-exists=.env.local --import tsx scripts/setup-storage.ts
+```
+
+Script bersifat **idempotent** (aman dijalankan ulang) dan melakukan:
+
+1. Membuat bucket publik `book-covers` (limit 5 MB, MIME JPG/JPEG/PNG/WebP).
+2. Policy `storage.buckets`: read publik + kelola oleh service role.
+3. Policy `storage.objects`: read publik + tulis oleh role `anon` (role yang dipakai Storage API di project ini), `service_role`, dan `authenticated` — semua dibatasi ke bucket `book-covers`.
+
+Catatan: `createBucket()` via SDK tidak digunakan di sini karena policy RLS bucket di project ini menolak INSERT dari API; pembuatan via SQL (owner role) adalah cara yang andal.
+
 ---
 
 ## Private Bucket (Future)

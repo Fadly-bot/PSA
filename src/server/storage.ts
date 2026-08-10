@@ -27,6 +27,32 @@ function getClient() {
   });
 }
 
+/**
+ * Ensure the `book-covers` bucket exists (idempotent).
+ * STORAGE.md requires a public bucket named `book-covers`; if it is missing
+ * (e.g. a fresh Supabase project), create it automatically so uploads never
+ * fail with a missing-bucket error. Safe to run on every upload.
+ */
+async function ensureBucket(): Promise<void> {
+  const client = getClient();
+  const { data: buckets, error: listError } = await client.storage.listBuckets();
+  if (listError) {
+    throw new Error(`STORAGE_BUCKET_LIST_FAILED: ${listError.message}`);
+  }
+  const exists = (buckets ?? []).some((b) => b.id === BUCKET);
+  if (exists) return;
+
+  const { error: createError } = await client.storage.createBucket(BUCKET, {
+    public: true,
+  });
+  if (createError) {
+    // 409 means it was created concurrently — treat as success.
+    if (String(createError.statusCode) !== '409') {
+      throw new Error(`STORAGE_BUCKET_CREATE_FAILED: ${createError.message}`);
+    }
+  }
+}
+
 const ALLOWED_MIME = new Set(['image/jpeg', 'image/png', 'image/webp']);
 const ALLOWED_EXT = new Set(['jpg', 'jpeg', 'png', 'webp']);
 const MAX_SIZE = 5 * 1024 * 1024; // 5 MB
@@ -51,6 +77,7 @@ export function validateCoverFile(file: { name: string; type: string; size: numb
  */
 export async function uploadBookCover(file: ArrayBuffer, fileMeta: { name: string; type: string; size: number }, slug: string): Promise<string> {
   validateCoverFile(fileMeta);
+  await ensureBucket();
 
   const client = getClient();
   const ext = fileMeta.name.split('.').pop()?.toLowerCase() ?? 'jpg';
@@ -92,6 +119,7 @@ export async function deleteBookCover(pathOrUrl: string): Promise<void> {
 export async function testStorage(): Promise<{ ok: boolean; message: string }> {
   try {
     const client = getClient();
+    await ensureBucket();
     const { error } = await client.storage.from(BUCKET).list('', { limit: 1 });
     if (error) return { ok: false, message: error.message };
     return { ok: true, message: 'Storage terhubung' };

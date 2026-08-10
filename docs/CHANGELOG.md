@@ -99,6 +99,7 @@ Perbaikan keamanan.
 ## Fixed
 
 * `/api/borrowings/[id]` kini mengembalikan 404 (bukan 500) untuk id non-UUID.
+* **Upload cover buku**: bucket `book-covers` yang hilang kini dibuat otomatis (`ensureBucket` idempotent di `storage.ts`) + script setup `scripts/setup-storage.ts` untuk bucket & policy RLS. Sebelumnya upload selalu gagal dengan `COVER_UPLOAD_FAILED` karena bucket belum pernah dibuat dan `storage.buckets` ber-RLS tanpa policy.
 
 ---
 
