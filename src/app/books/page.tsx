@@ -1,10 +1,10 @@
 import Link from 'next/link';
-import Image from 'next/image';
 import type { Metadata } from 'next';
 import { and, asc, desc, eq, ilike, isNull, or, sql } from 'drizzle-orm';
 import { db } from '@/db/index';
 import { authors, bookInventories, books, categories, publishers } from '@/db/schema';
 import { SITE_URL } from '@/app/layout';
+import PublicNavbar from '@/components/public-navbar';
 
 export const dynamic = 'force-dynamic';
 
@@ -123,39 +123,31 @@ export default async function BooksPage({
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-      <header style={{ borderBottom: '1px solid var(--border)', background: 'var(--surface)' }}>
-        <div className="container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', paddingTop: 14, paddingBottom: 14 }}>
-          <Link href="/" aria-label="TBM Semesta Alam — Beranda" style={{ display: 'inline-flex', lineHeight: 0 }}>
-            <Image src="/logo-tbm-semesta-alam-nav.png" alt="TBM Semesta Alam" width={1233} height={578} className="brand-logo" />
-          </Link>
-          <nav style={{ display: 'flex', gap: 14, alignItems: 'center', fontSize: 14, flexWrap: 'wrap' }}>
-            <Link href="/" style={{ color: 'var(--text)' }}>Beranda</Link>
-            <Link href="/books" style={{ color: 'var(--text)', fontWeight: 600 }}>Katalog</Link>
-            <Link href="/login" style={{ color: 'var(--text)' }}>Masuk</Link>
-            <Link href="/register" className="btn" style={{ padding: '8px 14px' }}>Daftar</Link>
-          </nav>
-        </div>
-      </header>
+      <PublicNavbar active="/books" />
 
       <main className="container" style={{ flex: 1 }}>
-        <h1 style={{ fontSize: 26, fontWeight: 800, margin: '24px 0 4px' }}>Katalog Buku</h1>
-        <p style={{ color: 'var(--muted)', margin: '0 0 20px' }}>{total} judul buku tersedia</p>
+        <div className="section-header" style={{ marginTop: 12 }}>
+          <div>
+            <h2>Katalog Buku</h2>
+            <p>{total} judul buku tersedia</p>
+          </div>
+        </div>
 
         {/* Search + filter bar */}
         <form method="get" action="/books" className="card" style={{ padding: 14, marginBottom: 20 }}>
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
             <input
-              type="text"
+              type="search"
               name="q"
               defaultValue={q}
               placeholder="Cari judul, penulis, atau ISBN..."
-              style={{ flex: '1 1 200px', minWidth: 0, padding: '10px 12px', border: '1px solid var(--border)', borderRadius: 8 }}
+              style={{ flex: '1 1 200px', minWidth: 0 }}
             />
-            <select name="category" defaultValue={category} style={{ padding: '10px 12px', border: '1px solid var(--border)', borderRadius: 8 }}>
+            <select name="category" defaultValue={category} style={{ width: 'auto', flex: '0 1 180px' }}>
               <option value="">Semua Kategori</option>
               {categoryRows.map((c) => <option key={c.id} value={c.name}>{c.name}</option>)}
             </select>
-            <select name="sort" defaultValue={sort} style={{ padding: '10px 12px', border: '1px solid var(--border)', borderRadius: 8 }}>
+            <select name="sort" defaultValue={sort} style={{ width: 'auto' }}>
               <option value="newest">Terbaru</option>
               <option value="oldest">Terlama</option>
               <option value="title-asc">A-Z</option>
@@ -169,30 +161,36 @@ export default async function BooksPage({
         </form>
 
         {rows.length === 0 ? (
-          <div className="card" style={{ padding: 32, textAlign: 'center', color: 'var(--muted)' }}>
-            Tidak ada buku yang cocok dengan pencarian Anda.
+          <div className="empty-state">
+            <div className="icon">🔍</div>
+            <p className="title">Tidak ada buku yang cocok</p>
+            <p>Coba ubah kata kunci atau filter pencarian Anda.</p>
           </div>
         ) : (
           <div className="grid grid-4">
             {rows.map((b) => (
-              <Link key={b.id} href={`/books/${b.slug}`} className="card" style={{ textDecoration: 'none', color: 'inherit', display: 'block', padding: 0, overflow: 'hidden' }}>
-                <div style={{ aspectRatio: '2/3', background: '#eef2ff', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--muted)', fontSize: 13 }}>
+              <Link key={b.id} href={`/books/${b.slug}`} className="book-card">
+                <div className="cover">
                   {b.coverImage ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={b.coverImage} alt={`Sampul buku ${b.title}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} loading="lazy" />
+                    <img src={b.coverImage} alt={`Sampul buku ${b.title}`} loading="lazy" />
                   ) : (
-                    '📖'
+                    <span>📖</span>
                   )}
                 </div>
-                <div style={{ padding: 14 }}>
-                  <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 4, lineHeight: 1.4 }}>{b.title}</div>
-                  <div style={{ fontSize: 13, color: 'var(--muted)', marginBottom: 6 }}>
-                    {b.authorName ?? '—'}{b.categoryName ? ` · ${b.categoryName}` : ''}
-                  </div>
-                  <div style={{ fontSize: 12, fontWeight: 600 }}>
-                    {(availability[b.id] ?? 0) > 0
-                      ? <span style={{ color: 'var(--success)' }}>Tersedia ({availability[b.id]})</span>
-                      : <span style={{ color: 'var(--muted)' }}>Stok kosong</span>}
+                <div className="body">
+                  {b.categoryName && <p className="category">{b.categoryName}</p>}
+                  <h3 className="title">{b.title}</h3>
+                  <p className="meta">
+                    {b.authorName ?? '—'}
+                    {b.publicationYear ? ` · ${b.publicationYear}` : ''}
+                  </p>
+                  <div className="availability">
+                    {(availability[b.id] ?? 0) > 0 ? (
+                      <span className="yes">✓ Tersedia ({availability[b.id]})</span>
+                    ) : (
+                      <span className="no">Stok kosong</span>
+                    )}
                   </div>
                 </div>
               </Link>
@@ -212,7 +210,7 @@ export default async function BooksPage({
         )}
       </main>
 
-      <footer style={{ borderTop: '1px solid var(--border)', background: 'var(--surface)', padding: '20px 0' }}>
+      <footer className="footer">
         <div className="container" style={{ fontSize: 14 }}>
           © {new Date().getFullYear()} TBM Semesta Alam
         </div>

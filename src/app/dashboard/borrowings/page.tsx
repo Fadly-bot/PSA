@@ -21,6 +21,13 @@ const statusLabel: Record<string, string> = {
   cancelled: 'Dibatalkan',
 };
 
+const statusTone: Record<string, string> = {
+  borrowed: 'badge info',
+  returned: 'badge success',
+  overdue: 'badge error',
+  cancelled: 'badge neutral',
+};
+
 export default function BorrowingsPage() {
   const [items, setItems] = useState<Borrowing[]>([]);
   const [loading, setLoading] = useState(true);
@@ -116,7 +123,7 @@ export default function BorrowingsPage() {
                   <td>{b.items?.length ?? 0} eks.</td>
                   <td>{b.borrowDate}</td>
                   <td>{b.dueDate}</td>
-                  <td><span className="badge">{statusLabel[b.status] ?? b.status}</span></td>
+                  <td><span className={statusTone[b.status] ?? 'badge neutral'}>{statusLabel[b.status] ?? b.status}</span></td>
                   <td>
                     <Link href={`/dashboard/borrowings/${b.id}`} className="btn secondary">Detail</Link>
                   </td>

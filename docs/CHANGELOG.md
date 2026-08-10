@@ -112,6 +112,14 @@ Perbaikan keamanan.
 * `/api/borrowings/[id]` kini mengembalikan 404 (bukan 500) untuk id non-UUID.
 * **Upload cover buku**: bucket `book-covers` yang hilang kini dibuat otomatis (`ensureBucket` idempotent di `storage.ts`) + script setup `scripts/setup-storage.ts` untuk bucket & policy RLS. Sebelumnya upload selalu gagal dengan `COVER_UPLOAD_FAILED` karena bucket belum pernah dibuat dan `storage.buckets` ber-RLS tanpa policy.
 
+## Changed
+
+* **Design system**: palet hijau hangat (referensi Digital Community Library UI/UX), font Nunito + DM Serif Display, badge tone (success/warning/error/info/neutral), skeleton loading, toast, stat cards, book cards, focus rings aksesibilitas, mobile table strategy.
+* **Navbar publik reusable** (`src/components/public-navbar.tsx`): auth-aware (Masuk/Daftar/Dasbor/Keluar) + hamburger menu mobile dengan dropdown & backdrop.
+* **Dashboard layout**: sidebar desktop dengan section grouping + drawer mobile (hamburger + backdrop, a11y dialog). Logout kini redirect ke `/`.
+* **Halaman publik dipoles**: beranda (hero, search, kategori, koleksi terbaru, CTA), katalog (book cards, empty/error/loading state), detail buku (cover, sinopsis, ketersediaan), login & register (panel hero + form card).
+* Status badge peminjaman kini berwarna sesuai status (Dipinjam info / Dikembalikan success / Terlambat error / Dibatalkan neutral).
+
 ---
 
 # v1.0.0 - Initial Release

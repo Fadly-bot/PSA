@@ -127,45 +127,55 @@ Dashboard
 
 Primary
 
-* Blue
+* Hijau hangat (`#2D6A4F`) — identitas perpustakaan (referensi Digital Community Library UI/UX)
+* Variants: `--primary-dark`, `--primary-light`, hover state lebih gelap
 
-Secondary
+Accent
 
-* Emerald
+* Amber / krem hangat (`--accent`) untuk CTA & highlight
 
 Success
 
-* Green
+* Green (`--success`)
 
 Warning
 
-* Yellow
+* Yellow (`--warning`)
 
 Danger
 
-* Red
+* Red (`--danger`)
 
-Background
+Neutral / Surface
 
-* White
-* Gray
-* Dark (Dark Mode)
+* White (`--surface`)
+* Gray terang (`--surface-2`, `--border`)
+* Teks: `--text`, `--muted`, `--text-subtle`
+* Dark (Dark Mode optional)
+
+Semua tone didefinisikan sebagai CSS custom properties di `src/app/globals.css`.
 
 ---
 
 # Typography
 
+Font
+
+* Body: **Nunito** (300–900) — sans-serif hangat & mudah dibaca
+* Display/Heading: **DM Serif Display** — serif elegan untuk hero & judul
+* Loaded via Google Fonts (`@import` di `globals.css`)
+
 Heading
 
-* Bold
+* Bold, pakai `--font-display` untuk judul besar
 
 Body
 
-* Regular
+* Regular, pakai `--font-body`
 
 Caption
 
-* Medium
+* Medium, ukuran kecil + warna `--muted`
 
 ---
 

@@ -124,7 +124,7 @@ export default function MembersPage() {
                   <td>{m.user?.email ?? '—'}</td>
                   <td>{m.phone ?? '—'}</td>
                   <td>{m.joinDate ?? '—'}</td>
-                  <td><span className="badge">{m.status ? 'Aktif' : 'Nonaktif'}</span></td>
+                  <td><span className={`badge ${m.status ? 'success' : 'neutral'}`}>{m.status ? 'Aktif' : 'Nonaktif'}</span></td>
                   <td>
                     <div style={{ display: 'flex', gap: 8 }}>
                       <Link href={`/dashboard/members/${m.id}/edit`} className="btn secondary">Edit</Link>

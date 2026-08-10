@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { authClient, getAuthErrorMessage } from '@/lib/auth-client';
 
@@ -32,37 +33,108 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="container" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <div className="card" style={{ maxWidth: 420, width: '100%' }}>
-        <h1 style={{ fontSize: 22, fontWeight: 700, margin: '0 0 4px' }}>Daftar akun</h1>
-        <p style={{ color: 'var(--muted)', margin: '0 0 20px' }}>Buat akun baru untuk mengakses sistem.</p>
+    <div
+      style={{
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 24,
+        background: 'linear-gradient(135deg, var(--primary-dark), var(--primary))',
+      }}
+    >
+      <div
+        className="card"
+        style={{
+          maxWidth: 440,
+          width: '100%',
+          padding: 32,
+          borderRadius: 16,
+          boxShadow: 'var(--shadow-lg)',
+        }}
+      >
+        <div style={{ textAlign: 'center', marginBottom: 24 }}>
+          <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 28, fontWeight: 400, margin: '0 0 4px' }}>
+            Daftar Akun
+          </h1>
+          <p style={{ color: 'var(--muted)', margin: 0, fontSize: 14 }}>
+            Daftar sebagai anggota perpustakaan, gratis.
+          </p>
+        </div>
 
         {error && (
-          <div style={{ background: '#fee2e2', color: '#991b1b', padding: '10px 12px', borderRadius: 10, marginBottom: 14 }}>
+          <div role="alert" style={{ background: 'var(--danger-bg)', color: 'var(--danger)', padding: '10px 14px', borderRadius: 10, marginBottom: 16, fontSize: 14, fontWeight: 600 }}>
             {error}
           </div>
         )}
 
-        <form onSubmit={onSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <form onSubmit={onSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }} noValidate>
           <div>
-            <label style={{ display: 'block', fontSize: 13, fontWeight: 600, marginBottom: 6 }}>Nama lengkap</label>
-            <input className="input" value={name} onChange={(e) => setName(e.target.value)} required />
+            <label htmlFor="reg-name" style={{ display: 'block', fontSize: 13, fontWeight: 700, marginBottom: 6 }}>
+              Nama lengkap
+            </label>
+            <input
+              id="reg-name"
+              className="input"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Nama Anda"
+              required
+              minLength={3}
+              maxLength={150}
+              autoComplete="name"
+            />
           </div>
           <div>
-            <label style={{ display: 'block', fontSize: 13, fontWeight: 600, marginBottom: 6 }}>Email</label>
-            <input className="input" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+            <label htmlFor="reg-email" style={{ display: 'block', fontSize: 13, fontWeight: 700, marginBottom: 6 }}>
+              Email
+            </label>
+            <input
+              id="reg-email"
+              className="input"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="nama@contoh.com"
+              required
+              autoComplete="email"
+            />
           </div>
           <div>
-            <label style={{ display: 'block', fontSize: 13, fontWeight: 600, marginBottom: 6 }}>Kata sandi</label>
-            <input className="input" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+            <label htmlFor="reg-password" style={{ display: 'block', fontSize: 13, fontWeight: 700, marginBottom: 6 }}>
+              Kata sandi
+            </label>
+            <input
+              id="reg-password"
+              className="input"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Minimal 8 karakter"
+              required
+              minLength={8}
+              maxLength={100}
+              autoComplete="new-password"
+            />
+            <p style={{ margin: '6px 0 0', fontSize: 12, color: 'var(--muted)' }}>
+              Minimal 8 karakter, mengandung huruf besar, huruf kecil, dan angka.
+            </p>
           </div>
-          <button className="btn" type="submit" disabled={loading} style={{ justifyContent: 'center' }}>
+          <button
+            className="btn"
+            type="submit"
+            disabled={loading}
+            style={{ justifyContent: 'center', padding: '12px 16px', marginTop: 4 }}
+          >
             {loading ? 'Memproses...' : 'Daftar'}
           </button>
         </form>
 
-        <p style={{ marginTop: 16, fontSize: 14, color: 'var(--muted)' }}>
-          Sudah punya akun? <a href="/login">Masuk</a>
+        <p style={{ marginTop: 20, fontSize: 14, color: 'var(--muted)', textAlign: 'center' }}>
+          Sudah punya akun?{' '}
+          <Link href="/login" style={{ fontWeight: 700 }}>
+            Masuk
+          </Link>
         </p>
       </div>
     </div>

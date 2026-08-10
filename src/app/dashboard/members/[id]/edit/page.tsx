@@ -100,7 +100,7 @@ export default function EditMemberPage({ params }: { params: Promise<{ id: strin
           <>
             <div>
               <label style={labelStyle}>Kode Anggota</label>
-              <input value={member.memberCode} disabled style={{ ...inputStyle, background: '#f1f5f9' }} />
+              <input value={member.memberCode} disabled style={{ ...inputStyle, background: 'var(--surface-2)' }} />
             </div>
             <div className="form-grid form-grid-2">
               <div>

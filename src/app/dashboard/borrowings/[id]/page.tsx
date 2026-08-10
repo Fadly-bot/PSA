@@ -23,6 +23,13 @@ const statusLabel: Record<string, string> = {
   cancelled: 'Dibatalkan',
 };
 
+const statusTone: Record<string, string> = {
+  borrowed: 'badge info',
+  returned: 'badge success',
+  overdue: 'badge error',
+  cancelled: 'badge neutral',
+};
+
 export default function BorrowingDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const [data, setData] = useState<BorrowingDetail | null>(null);
@@ -153,7 +160,7 @@ export default function BorrowingDetailPage({ params }: { params: Promise<{ id: 
                   {data.member?.user?.name ?? data.member?.memberCode ?? '—'} · {data.member?.user?.email ?? ''}
                 </p>
               </div>
-              <span className="badge" style={{ fontSize: 13, padding: '6px 12px' }}>{statusLabel[data.status] ?? data.status}</span>
+              <span className={statusTone[data.status] ?? 'badge neutral'} style={{ fontSize: 13, padding: '6px 12px' }}>{statusLabel[data.status] ?? data.status}</span>
             </div>
             <div className="form-grid form-grid-3" style={{ marginTop: 16 }}>
               <div>

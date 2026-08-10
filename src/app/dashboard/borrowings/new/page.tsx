@@ -108,7 +108,7 @@ export default function NewBorrowingPage() {
                     style={{
                       display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px',
                       borderBottom: '1px solid var(--border)', cursor: 'pointer',
-                      background: checked ? '#eef2ff' : 'transparent',
+                      background: checked ? 'var(--primary-light)' : 'transparent',
                     }}
                   >
                     <input type="checkbox" checked={checked} onChange={() => toggleInventory(inv.id)} />

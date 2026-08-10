@@ -85,7 +85,7 @@ export default function ReturnsPage() {
                   <td>{r.borrowing?.borrowDate ?? '—'}</td>
                   <td>{r.borrowing?.dueDate ?? '—'}</td>
                   <td>{r.returnDate}</td>
-                  <td><span className="badge">{r.status === 'late' ? 'Terlambat' : 'Tepat Waktu'}</span></td>
+                  <td><span className={`badge ${r.status === 'late' ? 'error' : 'success'}`}>{r.status === 'late' ? 'Terlambat' : 'Tepat Waktu'}</span></td>
                   <td>
                     <Link href={`/dashboard/borrowings/${r.borrowing?.id}`} className="btn secondary">Detail</Link>
                   </td>

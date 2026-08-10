@@ -1,11 +1,11 @@
 import Link from 'next/link';
-import Image from 'next/image';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { and, eq, isNull } from 'drizzle-orm';
 import { db } from '@/db/index';
 import { authors, bookInventories, books, categories, publishers, shelves } from '@/db/schema';
 import { SITE_URL } from '@/app/layout';
+import PublicNavbar from '@/components/public-navbar';
 
 export const dynamic = 'force-dynamic';
 
@@ -104,19 +104,7 @@ export default async function BookDetailPage({ params }: { params: Promise<{ slu
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-      <header style={{ borderBottom: '1px solid var(--border)', background: 'var(--surface)' }}>
-        <div className="container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', paddingTop: 14, paddingBottom: 14 }}>
-          <Link href="/" aria-label="TBM Semesta Alam — Beranda" style={{ display: 'inline-flex', lineHeight: 0 }}>
-            <Image src="/logo-tbm-semesta-alam-nav.png" alt="TBM Semesta Alam" width={1233} height={578} className="brand-logo" />
-          </Link>
-          <nav style={{ display: 'flex', gap: 14, alignItems: 'center', fontSize: 14, flexWrap: 'wrap' }}>
-            <Link href="/" style={{ color: 'var(--text)' }}>Beranda</Link>
-            <Link href="/books" style={{ color: 'var(--text)', fontWeight: 600 }}>Katalog</Link>
-            <Link href="/login" style={{ color: 'var(--text)' }}>Masuk</Link>
-            <Link href="/register" className="btn" style={{ padding: '8px 14px' }}>Daftar</Link>
-          </nav>
-        </div>
-      </header>
+      <PublicNavbar active="/books" />
 
       <main className="container" style={{ flex: 1 }}>
         <nav style={{ fontSize: 13, color: 'var(--muted)', margin: '20px 0' }}>
@@ -128,7 +116,7 @@ export default async function BookDetailPage({ params }: { params: Promise<{ slu
         <div className="detail-grid">
           {/* Cover */}
           <div>
-            <div style={{ aspectRatio: '2/3', background: '#eef2ff', borderRadius: 12, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--muted)', boxShadow: '0 4px 16px rgba(0,0,0,0.08)' }}>
+            <div style={{ aspectRatio: '2/3', background: 'var(--surface-2)', borderRadius: 12, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--muted-light)', boxShadow: 'var(--shadow-md)' }}>
               {book.coverImage ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={book.coverImage} alt={`Sampul buku ${book.title}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -140,7 +128,7 @@ export default async function BookDetailPage({ params }: { params: Promise<{ slu
 
           {/* Info */}
           <div>
-            <h1 style={{ fontSize: 28, fontWeight: 800, margin: '0 0 8px' }}>{book.title}</h1>
+            <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 34, fontWeight: 400, margin: '0 0 8px', lineHeight: 1.15 }}>{book.title}</h1>
             <div style={{ fontSize: 14, color: 'var(--muted)', marginBottom: 16 }}>
               {book.author?.name && <span>oleh <strong>{book.author.name}</strong></span>}
               {book.category?.name && <span> · {book.category.name}</span>}
@@ -183,7 +171,7 @@ export default async function BookDetailPage({ params }: { params: Promise<{ slu
             {(book.synopsis || book.description) && (
               <div className="card" style={{ marginBottom: 20 }}>
                 <h2 style={{ fontSize: 16, fontWeight: 700, margin: '0 0 8px' }}>Sinopsis</h2>
-                <p style={{ margin: 0, color: '#334155', whiteSpace: 'pre-wrap' }}>{book.synopsis ?? book.description}</p>
+                <p style={{ margin: 0, color: 'var(--text-subtle)', whiteSpace: 'pre-wrap' }}>{book.synopsis ?? book.description}</p>
               </div>
             )}
 
@@ -207,7 +195,9 @@ export default async function BookDetailPage({ params }: { params: Promise<{ slu
                         <td style={{ fontWeight: 600 }}>{inv.inventoryCode}</td>
                         <td>{inv.shelfName ? `${inv.shelfCode ?? ''} ${inv.shelfName}` : '—'}</td>
                         <td>{conditionLabel[inv.condition] ?? inv.condition}</td>
-                        <td><span className="badge">{statusLabel[inv.status] ?? inv.status}</span></td>
+                        <td>                <span className={`badge ${inv.status === 'available' ? 'success' : inv.status === 'borrowed' ? 'info' : inv.status === 'maintenance' ? 'warning' : 'error'}`}>
+                  {statusLabel[inv.status] ?? inv.status}
+                </span></td>
                       </tr>
                     ))}
                   </tbody>
@@ -218,7 +208,7 @@ export default async function BookDetailPage({ params }: { params: Promise<{ slu
         </div>
       </main>
 
-      <footer style={{ borderTop: '1px solid var(--border)', background: 'var(--surface)', padding: '20px 0' }}>
+      <footer className="footer">
         <div className="container" style={{ fontSize: 14 }}>
           © {new Date().getFullYear()} TBM Semesta Alam
         </div>

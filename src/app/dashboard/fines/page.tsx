@@ -110,7 +110,7 @@ export default function FinesPage() {
                   <td style={{ fontWeight: 600 }}>{f.borrowing?.borrowCode ?? '—'}</td>
                   <td>{f.borrowing?.member?.user?.name ?? f.borrowing?.member?.memberCode ?? '—'}</td>
                   <td style={{ fontWeight: 600 }}>Rp{f.amount}</td>
-                  <td><span className="badge">{f.status === 'paid' ? 'Lunas' : 'Belum Dibayar'}</span></td>
+                  <td><span className={`badge ${f.status === 'paid' ? 'success' : 'warning'}`}>{f.status === 'paid' ? 'Lunas' : 'Belum Dibayar'}</span></td>
                   <td>{f.paidAt ? new Date(f.paidAt).toLocaleDateString('id-ID') : '—'}</td>
                   <td>
                     {f.status === 'unpaid' ? (
