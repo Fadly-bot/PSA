@@ -31,7 +31,7 @@ const STAFF_ONLY_PATHS = [
 /**
  * Paths that require admin role only.
  */
-const ADMIN_ONLY_PATHS = ['/dashboard/settings', '/dashboard/audit-logs', '/dashboard/users', '/dashboard/roles'];
+const ADMIN_ONLY_PATHS = ['/dashboard/settings', '/dashboard/audit-logs', '/dashboard/users', '/dashboard/roles', '/dashboard/staff'];
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;

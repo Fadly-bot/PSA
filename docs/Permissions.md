@@ -137,6 +137,28 @@ Aplikasi memiliki empat role utama.
 
 ---
 
+# Staff (Kelola Petugas)
+
+| Action | Guest | Member | Staff | Admin |
+|--------|:----:|:------:|:-----:|:-----:|
+| View Staff List | ❌ | ❌ | ❌ | ✅ |
+| Create Staff | ❌ | ❌ | ❌ | ✅ |
+| Edit Staff | ❌ | ❌ | ❌ | ✅ |
+| Activate / Deactivate Staff | ❌ | ❌ | ❌ | ✅ |
+| Change Role (staff ↔ member) | ❌ | ❌ | ❌ | ✅ |
+
+Aturan bisnis:
+
+- Hanya Admin yang dapat mengelola petugas (permission `user:*`).
+- Admin tidak dapat mengubah akun sendiri (mencegah lockout).
+- Akun admin tidak dapat diubah/diturunkan role-nya melalui endpoint ini.
+- Saat petugas diubah menjadi member, profil member dibuat otomatis (1:1 dengan user) agar dapat meminjam.
+- Saat member dipromosikan menjadi petugas, profil member dipertahankan (riwayat peminjaman tidak hilang).
+- Setiap perubahan (termasuk perubahan role) dicatat di audit_logs.
+- Member tidak pernah diberi permission admin atau akses dashboard staff.
+
+---
+
 # Borrowings
 
 | Action | Guest | Member | Staff | Admin |
@@ -211,6 +233,7 @@ Aplikasi memiliki empat role utama.
 | /dashboard/book-sources | Staff |
 | /dashboard/members | Staff |
 | /dashboard/reports | Staff |
+| /dashboard/staff | Admin |
 | /dashboard/users | Admin |
 | /dashboard/settings | Admin |
 

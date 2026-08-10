@@ -96,6 +96,17 @@ Perbaikan keamanan.
 * Migrasi parameter halaman edit ke Next.js 16 `params: Promise` dengan `use(params)`.
 * Sanitasi slug nama file upload cover buku di `storage.ts` (URL-safe).
 
+## Added
+
+* **Kelola Petugas** (`/dashboard/staff`, admin-only): list, tambah, edit, aktif/nonaktif, ubah role (staff ↔ member), search, pagination, confirmation dialog.
+* API admin baru: `GET/POST /api/users`, `PATCH /api/users/[id]` (permission `user:*`).
+* Halaman & menu sidebar "Kelola Petugas" (admin-only) + proteksi middleware `/dashboard/staff`.
+
+## Changed
+
+* Staff yang dibuat via `/api/users` tidak memiliki profil member (profil dibuat otomatis saat di-demote menjadi member, dipertahankan saat di-promote kembali).
+* Update `docs/Permissions.md` (section Staff & route protection).
+
 ## Fixed
 
 * `/api/borrowings/[id]` kini mengembalikan 404 (bukan 500) untuk id non-UUID.

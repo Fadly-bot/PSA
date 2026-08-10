@@ -17,6 +17,7 @@ const NAV: NavItem[] = [
   { href: '/dashboard/authors', label: 'Penulis', section: 'master' },
   { href: '/dashboard/publishers', label: 'Penerbit', section: 'master' },
   { href: '/dashboard/shelves', label: 'Rak Buku', section: 'master' },
+  { href: '/dashboard/staff', label: 'Kelola Petugas', section: 'admin', adminOnly: true },
   { href: '/dashboard/members', label: 'Anggota', section: 'library' },
   { href: '/dashboard/borrowings', label: 'Peminjaman', section: 'library' },
   { href: '/dashboard/returns', label: 'Pengembalian', section: 'library' },
