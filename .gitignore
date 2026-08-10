@@ -15,3 +15,5 @@ npm-debug.log*
 supabase/.temp/
 
 .obsidian/
+.vercel
+.env*
