@@ -22,6 +22,13 @@ Drizzle ORM
 
 Supabase PostgreSQL
 
+## Connection (Penting!)
+
+- Production memakai **Supabase Transaction Pooler** (PgBouncer transaction mode, port `6543`).
+- Client database (`src/db/index.ts`) WAJIB menggunakan **`prepare: false`** pada postgres.js.
+- Jangan ubah ke `prepare: true` (default): PgBouncer me-recycle koneksi idle dan membuang prepared statements, sehingga transaksi bisa tampak sukses di sisi client tetapi **tidak pernah benar-benar commit** (silent data loss — POST 201 tetapi data tidak tersimpan, pola yang pernah terjadi di Phase 3).
+- Gejala kegagalan: semua query biasa tetap jalan, hanya operasi `db.transaction()` yang diam-diam hilang setelah server idle beberapa menit. Restart dev server menyembunyikan gejala ini.
+
 ---
 
 # Design Principles

@@ -114,6 +114,7 @@ Perbaikan keamanan.
 
 ## Changed
 
+* **Fix kritis koneksi DB**: `postgres.js` kini memakai `prepare: false` di `src/db/index.ts`. Prepared statements (`prepare: true` default) tidak kompatibel dengan Supabase Transaction Pooler (PgBouncer transaction mode) — PgBouncer membuang prepared statements saat me-recycle koneksi sehingga **transaksi bisa sukses di sisi client tapi tidak pernah commit** (silent data loss: POST 201 → data hilang). Inilah akar masalah "peminjaman tidak bisa disimpan" yang dulu terlihat di Phase 3. Setelah fix, E2E penuh 75/75 PASS konsisten.
 * **Design system**: palet hijau hangat (referensi Digital Community Library UI/UX), font Nunito + DM Serif Display, badge tone (success/warning/error/info/neutral), skeleton loading, toast, stat cards, book cards, focus rings aksesibilitas, mobile table strategy.
 * **Navbar publik reusable** (`src/components/public-navbar.tsx`): auth-aware (Masuk/Daftar/Dasbor/Keluar) + hamburger menu mobile dengan dropdown & backdrop.
 * **Dashboard layout**: sidebar desktop dengan section grouping + drawer mobile (hamburger + backdrop, a11y dialog). Logout kini redirect ke `/`.

@@ -21,7 +21,11 @@ import { resolveConnectionString } from './connection-string';
  */
 export const client: ReturnType<typeof postgres> = (() => {
   try {
-    return postgres(resolveConnectionString(process.env.DATABASE_URL ?? ''));
+    // prepare: false — required for Supabase Transaction Pooler (PgBouncer in
+    // transaction mode), which drops client-side prepared statements when it
+    // recycles connections. With prepare:true a transaction could "succeed"
+    // client-side yet never be committed (silent data loss). See dbg-idle run.
+    return postgres(resolveConnectionString(process.env.DATABASE_URL ?? ''), { prepare: false });
   } catch (error) {
     const e = error instanceof Error ? error : new Error(String(error));
     console.error(`[db] ${e.message}`);
