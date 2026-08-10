@@ -43,9 +43,16 @@ const detailSelect: SelectedFields<any, any> = {
   },
 };
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
+    // A non-UUID id (e.g. "not-a-uuid") would raise a Postgres error (500);
+    // treat it as "not found" instead.
+    if (!UUID_RE.test(id)) {
+      return NextResponse.json({ error: 'BORROWING_NOT_FOUND: Data peminjaman tidak ditemukan.' }, { status: 404 });
+    }
     const user = await getCurrentUser();
     if (!user) return NextResponse.json({ error: 'Tidak diizinkan.' }, { status: 401 });
 

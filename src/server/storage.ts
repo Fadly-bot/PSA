@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { slugify } from '@/lib/utils';
 
 /**
  * Supabase Storage client (server-side).
@@ -53,7 +54,11 @@ export async function uploadBookCover(file: ArrayBuffer, fileMeta: { name: strin
 
   const client = getClient();
   const ext = fileMeta.name.split('.').pop()?.toLowerCase() ?? 'jpg';
-  const fileName = `${crypto.randomUUID()}-${slug}.${ext}`;
+  // The slug may come from a form input (e.g. the book title) and can contain
+  // spaces or special characters that are invalid in a Storage object key.
+  // Sanitize it to a URL-safe kebab-case slug before building the file name.
+  const safeSlug = slugify(slug) || 'cover';
+  const fileName = `${crypto.randomUUID()}-${safeSlug}.${ext}`;
 
   const { error } = await client.storage
     .from(BUCKET)

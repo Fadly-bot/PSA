@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { use, useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 
 type BorrowingDetail = {
@@ -23,7 +23,8 @@ const statusLabel: Record<string, string> = {
   cancelled: 'Dibatalkan',
 };
 
-export default function BorrowingDetailPage({ params }: { params: { id: string } }) {
+export default function BorrowingDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
   const [data, setData] = useState<BorrowingDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -37,7 +38,7 @@ export default function BorrowingDetailPage({ params }: { params: { id: string }
 
   const load = useCallback(async () => {
     try {
-      const res = await fetch(`/api/borrowings/${params.id}`);
+      const res = await fetch(`/api/borrowings/${id}`);
       if (!res.ok) {
         if (res.status === 404) setNotFound(true);
         throw new Error('Gagal memuat data.');
@@ -50,7 +51,7 @@ export default function BorrowingDetailPage({ params }: { params: { id: string }
     } finally {
       setLoading(false);
     }
-  }, [params.id]);
+  }, [id]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -61,7 +62,7 @@ export default function BorrowingDetailPage({ params }: { params: { id: string }
     setBusy(true);
     setError(null);
     try {
-      const res = await fetch(`/api/borrowings/${params.id}`, {
+      const res = await fetch(`/api/borrowings/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ newDueDate }),
@@ -82,7 +83,7 @@ export default function BorrowingDetailPage({ params }: { params: { id: string }
     setBusy(true);
     setError(null);
     try {
-      const res = await fetch(`/api/borrowings/${params.id}`, { method: 'DELETE' });
+      const res = await fetch(`/api/borrowings/${id}`, { method: 'DELETE' });
       const d = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(d?.error ?? 'Gagal membatalkan.');
       await load();
@@ -101,7 +102,7 @@ export default function BorrowingDetailPage({ params }: { params: { id: string }
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          borrowingId: params.id,
+          borrowingId: id,
           returnDate,
           notes: returnNotes || null,
           conditions,

@@ -1,4 +1,4 @@
-import { boolean, date, integer, numeric, pgEnum, pgTable, text, timestamp, uuid, varchar } from 'drizzle-orm/pg-core';
+import { boolean, date, index, integer, numeric, pgEnum, pgTable, text, timestamp, uuid, varchar } from 'drizzle-orm/pg-core';
 
 export const userStatusEnum = pgEnum('user_status', ['active', 'inactive', 'suspended']);
 export const bookStatusEnum = pgEnum('book_status', ['active', 'inactive']);
@@ -110,7 +110,11 @@ export const books = pgTable('books', {
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   deletedAt: timestamp('deleted_at', { withTimezone: true }),
-});
+}, (t) => [
+  // Dashboard & catalog filters: count active books, list by status.
+  index('books_status_idx').on(t.status),
+  index('books_deleted_at_idx').on(t.deletedAt),
+]);
 
 export const bookInventories = pgTable('book_inventories', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -124,7 +128,11 @@ export const bookInventories = pgTable('book_inventories', {
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   deletedAt: timestamp('deleted_at', { withTimezone: true }),
-});
+}, (t) => [
+  // Dashboard inventory counts group by status.
+  index('book_inventories_status_idx').on(t.status),
+  index('book_inventories_deleted_at_idx').on(t.deletedAt),
+]);
 
 export const borrowings = pgTable('borrowings', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -137,7 +145,14 @@ export const borrowings = pgTable('borrowings', {
   notes: text('notes'),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
-});
+}, (t) => [
+  // Dashboard counts (status/due_date/borrow_date) + recent-borrowings sort.
+  index('borrowings_status_idx').on(t.status),
+  index('borrowings_status_due_date_idx').on(t.status, t.dueDate),
+  index('borrowings_borrow_date_idx').on(t.borrowDate),
+  index('borrowings_member_id_idx').on(t.memberId),
+  index('borrowings_created_at_idx').on(t.createdAt),
+]);
 
 export const borrowingDetails = pgTable('borrowing_details', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -153,7 +168,10 @@ export const returns = pgTable('returns', {
   status: varchar('status', { length: 20 }).notNull().default('returned'),
   notes: text('notes'),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
-});
+}, (t) => [
+  // Dashboard "returns today" count.
+  index('returns_return_date_idx').on(t.returnDate),
+]);
 
 export const fines = pgTable('fines', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -162,7 +180,10 @@ export const fines = pgTable('fines', {
   paidAt: timestamp('paid_at', { withTimezone: true }),
   status: fineStatusEnum('status').notNull().default('unpaid'),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
-});
+}, (t) => [
+  // Dashboard outstanding-fines count + sum by status.
+  index('fines_status_idx').on(t.status),
+]);
 
 export const settings = pgTable('settings', {
   id: uuid('id').primaryKey().defaultRandom(),

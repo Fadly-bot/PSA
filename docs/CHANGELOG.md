@@ -89,6 +89,17 @@ Perbaikan keamanan.
 * Contribution guide.
 * AI Agent guide.
 
+## Changed
+
+* Optimasi performa Dashboard API: menggabungkan 14 query COUNT menjadi 7 query (`count(*) FILTER`), mengurangi round-trip ke database.
+* Menambahkan 11 database index (books, book_inventories, borrowings, returns, fines) untuk mempercepat query dashboard & filter katalog (migration `0004_shallow_colleen_wing`).
+* Migrasi parameter halaman edit ke Next.js 16 `params: Promise` dengan `use(params)`.
+* Sanitasi slug nama file upload cover buku di `storage.ts` (URL-safe).
+
+## Fixed
+
+* `/api/borrowings/[id]` kini mengembalikan 404 (bukan 500) untuk id non-UUID.
+
 ---
 
 # v1.0.0 - Initial Release

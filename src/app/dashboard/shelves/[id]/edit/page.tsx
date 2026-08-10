@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, use } from 'react';
 import Link from 'next/link';
 
 type Shelf = {
@@ -11,7 +11,8 @@ type Shelf = {
   description?: string | null;
 };
 
-export default function EditShelfPage({ params }: { params: { id: string } }) {
+export default function EditShelfPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
   const [code, setCode] = useState('');
   const [name, setName] = useState('');
   const [floor, setFloor] = useState('');
@@ -25,7 +26,7 @@ export default function EditShelfPage({ params }: { params: { id: string } }) {
     let cancelled = false;
     (async () => {
       try {
-        const res = await fetch(`/api/shelves/${params.id}`);
+        const res = await fetch(`/api/shelves/${id}`);
         if (!res.ok) {
           if (res.status === 404) setNotFound(true);
           throw new Error('Gagal memuat data.');
@@ -44,7 +45,7 @@ export default function EditShelfPage({ params }: { params: { id: string } }) {
       }
     })();
     return () => { cancelled = true; };
-  }, [params.id]);
+  }, [id]);
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,7 +54,7 @@ export default function EditShelfPage({ params }: { params: { id: string } }) {
     try {
       const body: any = { code, name, description };
       if (floor.trim() !== '') body.floor = Number(floor);
-      const res = await fetch(`/api/shelves/${params.id}`, {
+      const res = await fetch(`/api/shelves/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, use } from 'react';
 import Link from 'next/link';
 
 type BookSource = {
@@ -9,7 +9,8 @@ type BookSource = {
   description?: string | null;
 };
 
-export default function EditBookSourcePage({ params }: { params: { id: string } }) {
+export default function EditBookSourcePage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [loading, setLoading] = useState(true);
@@ -21,7 +22,7 @@ export default function EditBookSourcePage({ params }: { params: { id: string } 
     let cancelled = false;
     (async () => {
       try {
-        const res = await fetch(`/api/book-sources/${params.id}`);
+        const res = await fetch(`/api/book-sources/${id}`);
         if (!res.ok) {
           if (res.status === 404) setNotFound(true);
           throw new Error('Gagal memuat data.');
@@ -38,14 +39,14 @@ export default function EditBookSourcePage({ params }: { params: { id: string } 
       }
     })();
     return () => { cancelled = true; };
-  }, [params.id]);
+  }, [id]);
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
     setError(null);
     try {
-      const res = await fetch(`/api/book-sources/${params.id}`, {
+      const res = await fetch(`/api/book-sources/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, description }),

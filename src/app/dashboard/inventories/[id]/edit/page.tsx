@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, use } from 'react';
 import Link from 'next/link';
 
 type MasterItem = { id: string; name: string };
@@ -16,7 +16,8 @@ type Inventory = {
   shelf?: { id: string } | null;
 };
 
-export default function EditInventoryPage({ params }: { params: { id: string } }) {
+export default function EditInventoryPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
   const [inventory, setInventory] = useState<Inventory | null>(null);
   const [books, setBooks] = useState<BookItem[]>([]);
   const [sources, setSources] = useState<MasterItem[]>([]);
@@ -31,7 +32,7 @@ export default function EditInventoryPage({ params }: { params: { id: string } }
     (async () => {
       try {
         const [invRes, bRes, sRes, shRes] = await Promise.all([
-          fetch(`/api/inventories/${params.id}`),
+          fetch(`/api/inventories/${id}`),
           fetch('/api/books?limit=100&status=active'),
           fetch('/api/book-sources?limit=100'),
           fetch('/api/shelves?limit=100'),
@@ -54,7 +55,7 @@ export default function EditInventoryPage({ params }: { params: { id: string } }
       }
     })();
     return () => { cancelled = true; };
-  }, [params.id]);
+  }, [id]);
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -62,7 +63,7 @@ export default function EditInventoryPage({ params }: { params: { id: string } }
     setSaving(true);
     setError(null);
     try {
-      const res = await fetch(`/api/inventories/${params.id}`, {
+      const res = await fetch(`/api/inventories/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

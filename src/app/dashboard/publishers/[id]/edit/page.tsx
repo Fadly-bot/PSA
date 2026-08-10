@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, use } from 'react';
 import Link from 'next/link';
 
 type Publisher = {
@@ -12,7 +12,8 @@ type Publisher = {
   website?: string | null;
 };
 
-export default function EditPublisherPage({ params }: { params: { id: string } }) {
+export default function EditPublisherPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
   const [name, setName] = useState('');
   const [address, setAddress] = useState('');
   const [email, setEmail] = useState('');
@@ -27,7 +28,7 @@ export default function EditPublisherPage({ params }: { params: { id: string } }
     let cancelled = false;
     (async () => {
       try {
-        const res = await fetch(`/api/publishers/${params.id}`);
+        const res = await fetch(`/api/publishers/${id}`);
         if (!res.ok) {
           if (res.status === 404) setNotFound(true);
           throw new Error('Gagal memuat data.');
@@ -47,14 +48,14 @@ export default function EditPublisherPage({ params }: { params: { id: string } }
       }
     })();
     return () => { cancelled = true; };
-  }, [params.id]);
+  }, [id]);
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
     setError(null);
     try {
-      const res = await fetch(`/api/publishers/${params.id}`, {
+      const res = await fetch(`/api/publishers/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, address, email, phone, website }),

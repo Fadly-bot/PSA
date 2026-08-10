@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, use } from 'react';
 import Link from 'next/link';
 
 type Member = {
@@ -14,7 +14,8 @@ type Member = {
   user?: { id: string; name: string; email: string } | null;
 };
 
-export default function EditMemberPage({ params }: { params: { id: string } }) {
+export default function EditMemberPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
   const [member, setMember] = useState<Member | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -25,7 +26,7 @@ export default function EditMemberPage({ params }: { params: { id: string } }) {
     let cancelled = false;
     (async () => {
       try {
-        const res = await fetch(`/api/members/${params.id}`);
+        const res = await fetch(`/api/members/${id}`);
         if (!res.ok) {
           if (res.status === 404) setNotFound(true);
           throw new Error('Gagal memuat data.');
@@ -39,7 +40,7 @@ export default function EditMemberPage({ params }: { params: { id: string } }) {
       }
     })();
     return () => { cancelled = true; };
-  }, [params.id]);
+  }, [id]);
 
   const update = (patch: Partial<Member>) => setMember((prev) => (prev ? { ...prev, ...patch } : prev));
 
@@ -49,7 +50,7 @@ export default function EditMemberPage({ params }: { params: { id: string } }) {
     setSaving(true);
     setError(null);
     try {
-      const res = await fetch(`/api/members/${params.id}`, {
+      const res = await fetch(`/api/members/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

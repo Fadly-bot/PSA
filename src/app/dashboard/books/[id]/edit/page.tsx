@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, use } from 'react';
 import Link from 'next/link';
 
 type MasterItem = { id: string; name: string };
@@ -20,7 +20,8 @@ type Book = {
   category?: { id: string } | null;
 };
 
-export default function EditBookPage({ params }: { params: { id: string } }) {
+export default function EditBookPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
   const [book, setBook] = useState<Book | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -37,7 +38,7 @@ export default function EditBookPage({ params }: { params: { id: string } }) {
     let cancelled = false;
     (async () => {
       try {
-        const res = await fetch(`/api/books/${params.id}`);
+        const res = await fetch(`/api/books/${id}`);
         if (!res.ok) {
           if (res.status === 404) setNotFound(true);
           throw new Error('Gagal memuat data.');
@@ -51,7 +52,7 @@ export default function EditBookPage({ params }: { params: { id: string } }) {
       }
     })();
     return () => { cancelled = true; };
-  }, [params.id]);
+  }, [id]);
 
   useEffect(() => {
     Promise.all([
@@ -105,7 +106,7 @@ export default function EditBookPage({ params }: { params: { id: string } }) {
     setSaving(true);
     setError(null);
     try {
-      const res = await fetch(`/api/books/${params.id}`, {
+      const res = await fetch(`/api/books/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
