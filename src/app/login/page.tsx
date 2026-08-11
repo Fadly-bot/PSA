@@ -21,7 +21,18 @@ export default function LoginPage() {
       if (res.error) {
         setError(getAuthErrorMessage(res.error));
       } else {
-        router.push('/dashboard');
+        // Route by role: members go to their own area, staff/admin to the dashboard.
+        try {
+          const roleRes = await fetch('/api/auth/role');
+          if (roleRes.ok) {
+            const roleData = await roleRes.json();
+            router.push(roleData.role === 'member' ? '/member' : '/dashboard');
+          } else {
+            router.push('/dashboard');
+          }
+        } catch {
+          router.push('/dashboard');
+        }
         router.refresh();
       }
     } catch (err) {

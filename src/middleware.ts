@@ -8,7 +8,12 @@ import { eq } from 'drizzle-orm';
  * Client-side protected routes. Any path under one of these prefixes
  * requires a valid Better Auth session.
  */
-const PROTECTED_PATHS = ['/dashboard', '/admin', '/settings', '/profile'];
+const PROTECTED_PATHS = ['/dashboard', '/admin', '/settings', '/profile', '/member'];
+
+/**
+ * Member-only area: staff/admin are redirected back to the staff dashboard.
+ */
+const MEMBER_ONLY_PATHS = ['/member'];
 
 /**
  * Paths that require staff/admin role (not accessible by member).
@@ -54,34 +59,53 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
+  const [userRow] = await db
+    .select({ roleName: roles.name })
+    .from(users)
+    .leftJoin(roles, eq(users.roleId, roles.id))
+    .where(eq(users.id, session.user.id))
+    .limit(1);
+
+  const roleName = userRow?.roleName;
+  const isAdmin = roleName === 'admin';
+  const isStaff = isAdmin || roleName === 'staff';
+
+  // Member area is only for members — staff/admin go to their dashboard.
+  const isMemberArea = MEMBER_ONLY_PATHS.some((prefix) =>
+    pathname.startsWith(prefix),
+  );
+  if (isMemberArea) {
+    if (roleName !== 'member') {
+      const url = request.nextUrl.clone();
+      url.pathname = '/dashboard';
+      return NextResponse.redirect(url);
+    }
+    return NextResponse.next();
+  }
+
+  // Everyone else in a protected path is staff/admin-facing; members go to
+  // their own area instead of the staff dashboard.
+  if (roleName === 'member') {
+    const url = request.nextUrl.clone();
+    url.pathname = '/member';
+    return NextResponse.redirect(url);
+  }
+
   const isAdminOnly = ADMIN_ONLY_PATHS.some((prefix) =>
     pathname.startsWith(prefix),
   );
   const isStaffOnly = STAFF_ONLY_PATHS.some((prefix) =>
     pathname.startsWith(prefix),
   );
-  if (isAdminOnly || isStaffOnly) {
-    const [userRow] = await db
-      .select({ roleName: roles.name })
-      .from(users)
-      .leftJoin(roles, eq(users.roleId, roles.id))
-      .where(eq(users.id, session.user.id))
-      .limit(1);
-
-    const roleName = userRow?.roleName;
-    const isAdmin = roleName === 'admin';
-    const isStaff = isAdmin || roleName === 'staff';
-
-    if (isAdminOnly && !isAdmin) {
-      const url = request.nextUrl.clone();
-      url.pathname = '/dashboard';
-      return NextResponse.redirect(url);
-    }
-    if (isStaffOnly && !isStaff) {
-      const url = request.nextUrl.clone();
-      url.pathname = '/dashboard';
-      return NextResponse.redirect(url);
-    }
+  if (isAdminOnly && !isAdmin) {
+    const url = request.nextUrl.clone();
+    url.pathname = '/dashboard';
+    return NextResponse.redirect(url);
+  }
+  if (isStaffOnly && !isStaff) {
+    const url = request.nextUrl.clone();
+    url.pathname = '/dashboard';
+    return NextResponse.redirect(url);
   }
 
   return NextResponse.next();
@@ -93,6 +117,7 @@ export const config = {
   runtime: 'nodejs',
   matcher: [
     '/dashboard/:path*',
+    '/member/:path*',
     '/admin/:path*',
     '/settings/:path*',
     '/profile/:path*',

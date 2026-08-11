@@ -42,6 +42,14 @@ export async function GET() {
         .select({ count: sql<number>`count(*)` })
         .from(borrowings)
         .where(eq(borrowings.memberId, ownMember.id));
+      const [returnedBorrowings] = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(borrowings)
+        .where(and(eq(borrowings.memberId, ownMember.id), eq(borrowings.status, 'returned')));
+      const [overdueBorrowings] = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(borrowings)
+        .where(and(eq(borrowings.memberId, ownMember.id), sql`${borrowings.status} = 'borrowed' AND ${borrowings.dueDate} < ${today}`));
       const [outstandingFines] = await db
         .select({ count: sql<number>`count(*)` })
         .from(fines)
@@ -71,6 +79,8 @@ export async function GET() {
         stats: {
           activeBorrowings: Number(activeBorrowings?.count ?? 0),
           totalBorrowings: Number(totalBorrowings?.count ?? 0),
+          returnedBorrowings: Number(returnedBorrowings?.count ?? 0),
+          overdueBorrowings: Number(overdueBorrowings?.count ?? 0),
           outstandingFines: Number(outstandingFines?.count ?? 0),
           fineTotal: formatRupiah(fineTotal?.total),
         },

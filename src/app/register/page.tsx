@@ -22,7 +22,9 @@ export default function RegisterPage() {
       if (res.error) {
         setError(getAuthErrorMessage(res.error));
       } else {
-        router.push('/dashboard');
+        // Self-registration always creates a Member account (role = member),
+        // so the new user lands in their member area.
+        router.push('/member');
         router.refresh();
       }
     } catch (err) {

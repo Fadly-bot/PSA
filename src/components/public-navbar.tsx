@@ -8,7 +8,21 @@ import { authClient, signOut } from '@/lib/auth-client';
 
 type NavLink = { href: string; label: string };
 
-const LINKS: NavLink[] = [
+const GUEST_LINKS: NavLink[] = [
+  { href: '/', label: 'Beranda' },
+  { href: '/books', label: 'Katalog' },
+];
+
+/** Links shown to logged-in members (browse + self-service). */
+const MEMBER_LINKS: NavLink[] = [
+  { href: '/', label: 'Beranda' },
+  { href: '/books', label: 'Katalog Buku' },
+  { href: '/member/my-books', label: 'Buku Saya' },
+  { href: '/member', label: 'Area Anggota' },
+];
+
+/** Links shown to staff/admin. */
+const STAFF_LINKS: NavLink[] = [
   { href: '/', label: 'Beranda' },
   { href: '/books', label: 'Katalog' },
 ];
@@ -17,18 +31,33 @@ export default function PublicNavbar({ active }: { active?: string }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [user, setUser] = useState<{ name?: string } | null>(null);
+  const [role, setRole] = useState<string>('');
   const [checked, setChecked] = useState(false);
 
   useEffect(() => {
     authClient
       .getSession()
-      .then((s) => {
+      .then(async (s) => {
         const u = (s as any)?.user ?? (s as any)?.data?.user ?? null;
         setUser(u);
+        if (u?.id) {
+          try {
+            const res = await fetch('/api/auth/role');
+            if (res.ok) {
+              const d = await res.json();
+              setRole(d.role ?? '');
+            }
+          } catch {
+            // ignore — dashboard link fallback
+          }
+        }
       })
       .catch(() => setUser(null))
       .finally(() => setChecked(true));
   }, []);
+
+  const isMember = role === 'member';
+  const links = !user ? GUEST_LINKS : isMember ? MEMBER_LINKS : STAFF_LINKS;
 
   const isActive = (href: string) =>
     (active ?? pathname) === href || (href !== '/' && (active ?? pathname).startsWith(href));
@@ -60,16 +89,18 @@ export default function PublicNavbar({ active }: { active?: string }) {
 
         {/* Desktop links */}
         <nav className="nav-links" aria-label="Navigasi utama" style={{ gap: 16, alignItems: 'center', fontSize: 14, flexWrap: 'wrap' }}>
-          {LINKS.map((l) => (
+          {links.map((l) => (
             <Link key={l.href} href={l.href} style={{ color: 'var(--text)', fontWeight: isActive(l.href) ? 700 : 500 }}>
               {l.label}
             </Link>
           ))}
           {checked && user ? (
             <>
-              <Link href="/dashboard" style={{ color: 'var(--text)', fontWeight: 600 }}>
-                Dasbor
-              </Link>
+              {!isMember && (
+                <Link href="/dashboard" style={{ color: 'var(--text)', fontWeight: 600 }}>
+                  Dasbor
+                </Link>
+              )}
               <button className="btn outline sm" onClick={onLogout} style={{ cursor: 'pointer' }}>
                 Keluar
               </button>
@@ -91,6 +122,7 @@ export default function PublicNavbar({ active }: { active?: string }) {
           className="nav-toggle"
           aria-label={open ? 'Tutup menu' : 'Buka menu'}
           aria-expanded={open}
+          aria-controls="public-mobile-menu"
           onClick={() => setOpen((v) => !v)}
           style={{
             border: '1px solid var(--border)',
@@ -118,6 +150,7 @@ export default function PublicNavbar({ active }: { active?: string }) {
       {/* Mobile dropdown */}
       {open && (
         <nav
+          id="public-mobile-menu"
           aria-label="Navigasi mobile"
           style={{
             display: 'flex',
@@ -128,7 +161,7 @@ export default function PublicNavbar({ active }: { active?: string }) {
             background: 'var(--surface)',
           }}
         >
-          {LINKS.map((l) => (
+          {links.map((l) => (
             <Link
               key={l.href}
               href={l.href}
@@ -144,12 +177,14 @@ export default function PublicNavbar({ active }: { active?: string }) {
               {l.label}
             </Link>
           ))}
-          <div style={{ borderTop: '1px solid var(--border)', margin: '8px 0', }} />
+          <div style={{ borderTop: '1px solid var(--border)', margin: '8px 0' }} />
           {checked && user ? (
             <>
-              <Link href="/dashboard" onClick={close} style={{ padding: '10px 12px', borderRadius: 8, color: 'var(--text)', fontWeight: 600 }}>
-                Dasbor
-              </Link>
+              {!isMember && (
+                <Link href="/dashboard" onClick={close} style={{ padding: '10px 12px', borderRadius: 8, color: 'var(--text)', fontWeight: 600 }}>
+                  Dasbor
+                </Link>
+              )}
               <button className="btn outline" onClick={onLogout} style={{ marginTop: 6, justifyContent: 'center' }}>
                 Keluar
               </button>

@@ -17,3 +17,6 @@ supabase/.temp/
 .obsidian/
 .vercel
 .env*
+
+# Local design references (Figma screenshots)
+referensi/
