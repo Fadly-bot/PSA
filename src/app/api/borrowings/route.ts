@@ -207,6 +207,15 @@ export async function POST(request: Request) {
       if (!memberId || inventoryIds.length === 0) {
         return NextResponse.json({ error: 'Data peminjaman tidak valid.' }, { status: 400 });
       }
+      // Defensive defaults: when the caller omits dates, apply the library
+      // loan rules (same as the self-service flow) instead of failing.
+      const maxBorrowDays = Number(await getSetting('maxBorrowDays', 7));
+      if (!borrowDate) borrowDate = new Date().toISOString().slice(0, 10);
+      if (!dueDate) {
+        const due = new Date(`${borrowDate}T00:00:00`);
+        due.setDate(due.getDate() + maxBorrowDays);
+        dueDate = due.toISOString().slice(0, 10);
+      }
     }
 
     if (dueDate! <= borrowDate!) {
