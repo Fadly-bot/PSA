@@ -389,6 +389,20 @@ input[type='date'], input[type='number'], input[type='search'], select, textarea
   .container { padding: 16px; }
 }
 
+/* Small-phone polish: keep stat values and cards from feeling cramped. */
+@media (max-width: 480px) {
+  .stat-card .value { font-size: 22px; }
+  .book-card .title { font-size: 14px; }
+  .section-header h2, .section-header .section-title { font-size: 21px; }
+  .btn { padding: 9px 14px; }
+}
+
+/* Member navbar: tighter gap between the many links on medium screens. */
+.member-nav-links { gap: 2px; }
+@media (min-width: 769px) and (max-width: 1080px) {
+  .member-nav-links { font-size: 13px; }
+}
+
 /* ─── Phase 5 additions ────────────────────────────────────────────── */
 
 /* Section header with optional action (reference SectionHeader). */

@@ -83,8 +83,8 @@ export default function MemberLayout({ children }: { children: React.ReactNode }
           {/* Desktop links */}
           <nav
             aria-label="Navigasi anggota"
-            style={{ display: 'flex', gap: 4, alignItems: 'center', fontSize: 14, flexWrap: 'wrap', justifyContent: 'flex-end' }}
             className="nav-links member-nav-links"
+            style={{ gap: 4, alignItems: 'center', fontSize: 14, flexWrap: 'wrap', justifyContent: 'flex-end' }}
           >
             {renderLinks(false)}
             <button
