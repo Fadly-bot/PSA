@@ -7,6 +7,7 @@ import { authors, bookInventories, books, categories, publishers, shelves } from
 import { SITE_URL } from '@/app/layout';
 import PublicNavbar from '@/components/public-navbar';
 import BorrowPanel from '@/components/borrow-panel';
+import BookCover from '@/components/book-cover';
 
 export const dynamic = 'force-dynamic';
 
@@ -117,13 +118,8 @@ export default async function BookDetailPage({ params }: { params: Promise<{ slu
         <div className="detail-grid">
           {/* Cover */}
           <div>
-            <div style={{ aspectRatio: '2/3', background: 'var(--surface-2)', borderRadius: 12, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--muted-light)', boxShadow: 'var(--shadow-md)' }}>
-              {book.coverImage ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={book.coverImage} alt={`Sampul buku ${book.title}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-              ) : (
-                <span style={{ fontSize: 40 }}>📖</span>
-              )}
+            <div style={{ aspectRatio: '2/3', background: 'var(--surface-2)', borderRadius: 12, overflow: 'hidden', boxShadow: 'var(--shadow-md)' }}>
+              <BookCover src={book.coverImage} alt={`Sampul buku ${book.title}`} title={book.title} />
             </div>
           </div>
 

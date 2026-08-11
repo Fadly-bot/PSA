@@ -609,8 +609,44 @@ input[type='date'], input[type='number'], input[type='search'], select, textarea
 .footer {
   border-top: 1px solid var(--border);
   background: var(--surface);
-  padding: 20px 0;
+  padding: 24px 0;
   margin-top: auto;
+}
+
+/* Category tiles (Figma-style colorful browse cards). */
+.category-tile {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 13px 18px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font-weight: 700;
+  font-size: 14px;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease;
+  text-decoration: none;
+}
+.category-tile:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--border-strong);
+  text-decoration: none;
+}
+.category-tile .tile-dot {
+  width: 11px;
+  height: 11px;
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+.category-tile .tile-count {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+  margin-left: auto;
+  padding-left: 8px;
 }
 
 /* Public hamburger (navbar). */

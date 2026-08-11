@@ -5,6 +5,7 @@ import { db } from '@/db/index';
 import { authors, bookInventories, books, categories, publishers } from '@/db/schema';
 import { SITE_URL } from '@/app/layout';
 import PublicNavbar from '@/components/public-navbar';
+import BookCover from '@/components/book-cover';
 
 export const dynamic = 'force-dynamic';
 
@@ -171,12 +172,7 @@ export default async function BooksPage({
             {rows.map((b) => (
               <Link key={b.id} href={`/books/${b.slug}`} className="book-card">
                 <div className="cover">
-                  {b.coverImage ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={b.coverImage} alt={`Sampul buku ${b.title}`} loading="lazy" />
-                  ) : (
-                    <span>📖</span>
-                  )}
+                  <BookCover src={b.coverImage} alt={`Sampul buku ${b.title}`} title={b.title} />
                 </div>
                 <div className="body">
                   {b.categoryName && <p className="category">{b.categoryName}</p>}

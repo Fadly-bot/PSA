@@ -1,11 +1,26 @@
 import Link from 'next/link';
-import { and, desc, eq, isNull } from 'drizzle-orm';
+import { and, desc, eq, isNull, sql } from 'drizzle-orm';
 import { db } from '@/db/index';
 import { authors, books, categories } from '@/db/schema';
 import { getSettings } from '@/server/settings';
 import PublicNavbar from '@/components/public-navbar';
+import BookCover from '@/components/book-cover';
 
 export const dynamic = 'force-dynamic';
+
+/** Warm editorial palette for category tiles (Figma reference). */
+const TILE_COLORS = [
+  '#2d6a4f',
+  '#e76f51',
+  '#1e6fa8',
+  '#c17a1d',
+  '#7a4fa0',
+  '#0e7c7b',
+  '#b4521e',
+  '#5b7a2f',
+  '#8a5a44',
+  '#35557d',
+];
 
 export default async function Home() {
   const [latestBooks, categoryRows, settings] = await Promise.all([
@@ -26,8 +41,15 @@ export default async function Home() {
       .orderBy(desc(books.createdAt))
       .limit(8),
     db
-      .select({ id: categories.id, name: categories.name })
+      .select({
+        id: categories.id,
+        name: categories.name,
+        count: sql<number>`count(${books.id})`,
+      })
       .from(categories)
+      .leftJoin(books, eq(books.categoryId, categories.id))
+      .where(and(isNull(books.deletedAt), eq(books.status, 'active')))
+      .groupBy(categories.id)
       .orderBy(categories.name)
       .limit(12),
     getSettings(),
@@ -83,12 +105,11 @@ export default async function Home() {
               {latestBooks.map((b) => (
                 <Link key={b.id} href={`/books/${b.slug}`} className="book-card">
                   <div className="cover">
-                    {b.coverImage ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={b.coverImage} alt={`Sampul buku ${b.title}`} loading="lazy" />
-                    ) : (
-                      <span>📖</span>
-                    )}
+                    <BookCover
+                      src={b.coverImage}
+                      alt={`Sampul buku ${b.title}`}
+                      title={b.title}
+                    />
                   </div>
                   <div className="body">
                     {b.categoryName && <p className="category">{b.categoryName}</p>}
@@ -104,25 +125,33 @@ export default async function Home() {
           )}
         </section>
 
-        {/* Categories */}
-        <section style={{ margin: '48px 0' }}>
+        {/* Categories — Figma-style browse tiles */}
+        <section style={{ margin: '52px 0' }}>
           <div className="section-header">
             <div>
               <h2>Jelajahi Kategori</h2>
               <p>Temukan buku berdasarkan topik favorit Anda.</p>
             </div>
+            <Link href="/books" className="btn secondary sm">
+              Lihat Semua →
+            </Link>
           </div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
-            {categoryRows.map((c) => (
-              <Link
-                key={c.id}
-                href={`/books?category=${encodeURIComponent(c.name)}`}
-                className="btn outline"
-                style={{ textDecoration: 'none' }}
-              >
-                {c.name}
-              </Link>
-            ))}
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
+            {categoryRows.map((c, i) => {
+              const color = TILE_COLORS[i % TILE_COLORS.length];
+              return (
+                <Link
+                  key={c.id}
+                  href={`/books?category=${encodeURIComponent(c.name)}`}
+                  className="category-tile"
+                  style={{ textDecoration: 'none' }}
+                >
+                  <span className="tile-dot" style={{ background: color }} aria-hidden="true" />
+                  {c.name}
+                  <span className="tile-count">{Number(c.count ?? 0)} buku</span>
+                </Link>
+              );
+            })}
             {categoryRows.length === 0 && (
               <div className="empty-state" style={{ width: '100%', padding: 24 }}>
                 <p className="title">Belum ada kategori.</p>
@@ -135,12 +164,13 @@ export default async function Home() {
         <section
           className="card"
           style={{
-            margin: '48px 0',
-            padding: 40,
+            margin: '52px 0',
+            padding: 44,
             textAlign: 'center',
             background: 'linear-gradient(135deg, var(--primary-dark), var(--primary))',
             border: 'none',
             color: '#fff',
+            borderRadius: 20,
           }}
         >
           <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 28, fontWeight: 400, margin: '0 0 8px' }}>
@@ -163,13 +193,27 @@ export default async function Home() {
 
       {/* Footer */}
       <footer className="footer">
-        <div className="container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap', fontSize: 14 }}>
-          <div>© {new Date().getFullYear()} {libraryName}</div>
+        <div
+          className="container"
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            gap: 12,
+            flexWrap: 'wrap',
+            fontSize: 14,
+          }}
+        >
+          <div>
+            <div style={{ fontWeight: 800 }}>{libraryName}</div>
+            <div style={{ color: 'var(--muted)', fontSize: 13 }}>Taman Bacaan Masyarakat</div>
+          </div>
           <div style={{ display: 'flex', gap: 16 }}>
             <Link href="/books">Katalog</Link>
             <Link href="/login">Masuk</Link>
             <Link href="/register">Daftar</Link>
           </div>
+          <div style={{ color: 'var(--muted)', fontSize: 13 }}>© {new Date().getFullYear()} {libraryName}</div>
         </div>
       </footer>
     </div>
