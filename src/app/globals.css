@@ -463,6 +463,25 @@ input[type='date'], input[type='number'], input[type='search'], select, textarea
   overflow: hidden;
   position: relative;
 }
+/* Hover borrow overlay on the cover (desktop with hover only).
+   Mobile gets an always-visible borrow button instead — the borrow action
+   is never reachable only through hover. */
+.book-card .cover-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: flex-end;
+  padding: 10px;
+  background: linear-gradient(to top, rgba(30, 26, 22, 0.6), transparent 45%);
+  opacity: 0;
+  transition: opacity 0.18s ease;
+  pointer-events: none;
+}
+.book-card .cover-overlay .btn { pointer-events: auto; }
+.book-card:hover .cover-overlay { opacity: 1; }
+@media (hover: none) {
+  .book-card .cover-overlay { display: none; }
+}
 .book-card .cover img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s ease; }
 .book-card:hover .cover img { transform: scale(1.04); }
 .book-card .body { padding: 14px; }

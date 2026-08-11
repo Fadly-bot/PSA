@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { and, desc, eq, ilike, or, sql } from 'drizzle-orm';
+import { and, desc, eq, ilike, isNull, or, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import { db } from '@/db/index';
 import {
@@ -19,11 +19,14 @@ import type { SelectedFields } from 'drizzle-orm/operations';
 export const runtime = 'nodejs';
 
 const createBorrowingSchema = z.object({
-  memberId: z.string().uuid('Anggota tidak valid'),
-  borrowDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Tanggal pinjam tidak valid'),
-  dueDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Tanggal jatuh tempo tidak valid'),
+  memberId: z.string().uuid('Anggota tidak valid').optional(),
+  borrowDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Tanggal pinjam tidak valid').optional(),
+  dueDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Tanggal jatuh tempo tidak valid').optional(),
   notes: z.string().trim().max(1000).nullable().optional(),
-  inventoryIds: z.array(z.string().uuid('Inventaris tidak valid')).min(1, 'Pilih minimal satu inventaris'),
+  // Staff pick concrete inventories; a self-service member picks a book and
+  // the server resolves an available copy automatically.
+  inventoryIds: z.array(z.string().uuid('Inventaris tidak valid')).min(1, 'Pilih minimal satu inventaris').optional(),
+  bookId: z.string().uuid('Buku tidak valid').optional(),
 });
 
 const borrowingSelect: SelectedFields<any, any> = {
@@ -46,6 +49,8 @@ const borrowingSelect: SelectedFields<any, any> = {
       'inventoryCode', bi.inventory_code,
       'bookTitle', b.title,
       'bookSlug', b.slug,
+      'bookId', b.id,
+      'coverImage', b.cover_image,
       'condition', bi.condition,
       'status', bi.status
     ) ORDER BY bi.inventory_code), '[]'::json)
@@ -134,7 +139,9 @@ export async function POST(request: Request) {
   try {
     const user = await getCurrentUser();
     if (!user) return NextResponse.json({ error: 'Tidak diizinkan.' }, { status: 401 });
-    if (!hasPermission(user.role, 'borrowing:borrow')) {
+    const canBorrowAny = hasPermission(user.role, 'borrowing:borrow');
+    const canBorrowSelf = hasPermission(user.role, 'borrowing:borrow-self');
+    if (!canBorrowAny && !canBorrowSelf) {
       return NextResponse.json({ error: 'Tidak memiliki izin.' }, { status: 403 });
     }
 
@@ -148,10 +155,61 @@ export async function POST(request: Request) {
     }
     const data = parsed.data;
 
-    // Deduplicate inventory ids so the same inventory can't be borrowed twice in one request.
-    const inventoryIds = [...new Set(data.inventoryIds)];
+    let memberId = data.memberId;
+    let inventoryIds: string[] = data.inventoryIds ? [...new Set(data.inventoryIds)] : [];
+    let borrowDate = data.borrowDate;
+    let dueDate = data.dueDate;
+    const notes = data.notes;
 
-    if (data.dueDate <= data.borrowDate) {
+    // ── Self-service borrow: a member borrows a book for themselves. ──────
+    // The server resolves an available copy automatically and applies the
+    // library loan rules (maxBorrowDays), reusing the exact same system.
+    if (canBorrowSelf && !canBorrowAny) {
+      const [ownMember] = await db
+        .select({ id: members.id, status: members.status })
+        .from(members)
+        .where(eq(members.userId, user.id))
+        .limit(1);
+      if (!ownMember || !ownMember.status) {
+        return NextResponse.json({ error: 'MEMBER_BLOCKED: Profil anggota tidak aktif.' }, { status: 400 });
+      }
+      memberId = ownMember.id;
+      if (!data.bookId) {
+        return NextResponse.json({ error: 'Data peminjaman tidak valid.' }, { status: 400 });
+      }
+
+      const maxBorrowBooks = Number(await getSetting('maxBorrowBooks', 3));
+      const maxBorrowDays = Number(await getSetting('maxBorrowDays', 7));
+      const today = new Date().toISOString().slice(0, 10);
+      const due = new Date(`${today}T00:00:00`);
+      due.setDate(due.getDate() + maxBorrowDays);
+
+      const availableRows = await db
+        .select({ id: bookInventories.id })
+        .from(bookInventories)
+        .where(
+          and(
+            eq(bookInventories.bookId, data.bookId),
+            eq(bookInventories.status, 'available'),
+            isNull(bookInventories.deletedAt),
+          ),
+        )
+        .limit(maxBorrowBooks);
+      if (availableRows.length === 0) {
+        return NextResponse.json({ error: 'INVENTORY_NOT_AVAILABLE: Stok buku sedang tidak tersedia.' }, { status: 409 });
+      }
+
+      inventoryIds = availableRows.map((r) => r.id);
+      borrowDate = today;
+      dueDate = due.toISOString().slice(0, 10);
+    } else {
+      // Staff/admin flow requires an explicit member and concrete inventories.
+      if (!memberId || inventoryIds.length === 0) {
+        return NextResponse.json({ error: 'Data peminjaman tidak valid.' }, { status: 400 });
+      }
+    }
+
+    if (dueDate! <= borrowDate!) {
       return NextResponse.json({ error: 'INVALID_DUE_DATE: Tanggal jatuh tempo harus lebih besar dari tanggal pinjam.' }, { status: 400 });
     }
 
@@ -160,7 +218,7 @@ export async function POST(request: Request) {
       .select({ id: members.id, status: members.status, deletedAt: users.deletedAt })
       .from(members)
       .innerJoin(users, eq(members.userId, users.id))
-      .where(eq(members.id, data.memberId))
+      .where(eq(members.id, memberId!))
       .limit(1);
     if (!member || !member.status || member.deletedAt) {
       return NextResponse.json({ error: 'MEMBER_BLOCKED: Anggota tidak aktif atau tidak dapat meminjam.' }, { status: 400 });
@@ -215,12 +273,12 @@ export async function POST(request: Request) {
       const [borrowing] = await tx
         .insert(borrowings)
         .values({
-          memberId: data.memberId,
+          memberId: memberId!,
           borrowCode,
-          borrowDate: data.borrowDate,
-          dueDate: data.dueDate,
+          borrowDate: borrowDate!,
+          dueDate: dueDate!,
           status: 'borrowed',
-          notes: data.notes ?? null,
+          notes: notes ?? null,
         })
         .returning();
 

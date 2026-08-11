@@ -6,6 +6,7 @@ import { db } from '@/db/index';
 import { authors, bookInventories, books, categories, publishers, shelves } from '@/db/schema';
 import { SITE_URL } from '@/app/layout';
 import PublicNavbar from '@/components/public-navbar';
+import BorrowPanel from '@/components/borrow-panel';
 
 export const dynamic = 'force-dynamic';
 
@@ -144,6 +145,9 @@ export default async function BookDetailPage({ params }: { params: Promise<{ slu
               {book.publicationYear && <span className="badge" style={{ padding: '6px 14px', fontSize: 13 }}>{book.publicationYear}</span>}
               {book.pages && <span className="badge" style={{ padding: '6px 14px', fontSize: 13 }}>{book.pages} halaman</span>}
             </div>
+
+            {/* Self-service borrow panel — members can borrow directly here. */}
+            <BorrowPanel bookId={book.id} available={book.available} />
 
             <div className="card" style={{ marginBottom: 20 }}>
               <table style={{ width: '100%', fontSize: 14 }}>

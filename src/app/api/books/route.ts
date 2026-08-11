@@ -156,7 +156,11 @@ export async function GET(request: Request) {
       availableInventory: 0,
     }));
 
-    if (items.length > 0 && (includeInventories || isStaffView)) {
+    // Availability counts are public-ish info (the public catalog page shows
+    // them), so members get the totals; the concrete inventory list stays
+    // staff-only (includeInventories + staff permission).
+    const wantsCounts = includeInventories || isStaffView || user?.role === 'member';
+    if (items.length > 0 && wantsCounts) {
       const ids = items.map((b: any) => b.id);
       const invRows = await db
         .select({
@@ -176,7 +180,7 @@ export async function GET(request: Request) {
         row.availableInventory = perBook[row.id]?.available ?? 0;
       }
 
-      if (includeInventories) {
+      if (includeInventories && isStaffView) {
         const fullInv = await db
           .select()
           .from(bookInventories)

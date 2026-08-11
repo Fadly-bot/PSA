@@ -15,7 +15,7 @@ export const PERMISSIONS = {
   book: ['book:create', 'book:read', 'book:update', 'book:delete'],
   inventory: ['inventory:create', 'inventory:read', 'inventory:update', 'inventory:delete'],
   member: ['member:create', 'member:read', 'member:update', 'member:delete'],
-  borrowing: ['borrowing:borrow', 'borrowing:return', 'borrowing:extend'],
+  borrowing: ['borrowing:borrow', 'borrowing:borrow-self', 'borrowing:return', 'borrowing:extend'],
   return: ['return:create', 'return:read'],
   fine: ['fine:read', 'fine:create', 'fine:update', 'fine:pay'],
   report: ['report:read', 'report:export'],
@@ -127,7 +127,7 @@ export const ROLE_PERMISSIONS: Record<RoleName, Permission[]> = {
     'source:update',
     'source:delete',
   ],
-  member: ['book:read', 'member:read', 'author:read', 'category:read', 'publisher:read'],
+  member: ['book:read', 'member:read', 'author:read', 'category:read', 'publisher:read', 'borrowing:borrow-self'],
 };
 
 /**
