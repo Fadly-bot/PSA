@@ -1,7 +1,12 @@
+'use client';
+
+import { useState } from 'react';
+
 /**
- * Reusable book cover with a consistent fallback when no image exists.
- * Keeps a fixed 2:3 aspect ratio, object-fit cover, and rounded corners so
- * covers never look stretched or broken.
+ * Reusable book cover with a consistent fallback when no image exists OR when
+ * the stored image URL fails to load (broken image). Keeps a fixed 2:3 aspect
+ * ratio, object-fit cover, and rounded corners so covers never look stretched
+ * or broken.
  */
 export default function BookCover({
   src,
@@ -16,7 +21,9 @@ export default function BookCover({
   className?: string;
   sizes?: string;
 }) {
-  if (src) {
+  const [failed, setFailed] = useState(false);
+
+  if (src && !failed) {
     return (
       // eslint-disable-next-line @next/next/no-img-element
       <img
@@ -25,6 +32,7 @@ export default function BookCover({
         loading="lazy"
         sizes={sizes}
         className={className}
+        onError={() => setFailed(true)}
         style={{ width: '100%', height: '100%', objectFit: 'cover' }}
       />
     );
