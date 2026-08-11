@@ -142,13 +142,14 @@ export default async function BooksPage({
               name="q"
               defaultValue={q}
               placeholder="Cari judul, penulis, atau ISBN..."
+              aria-label="Cari judul, penulis, atau ISBN"
               style={{ flex: '1 1 200px', minWidth: 0 }}
             />
-            <select name="category" defaultValue={category} style={{ width: 'auto', flex: '0 1 180px' }}>
+            <select name="category" defaultValue={category} aria-label="Filter kategori" style={{ width: 'auto', flex: '0 1 180px' }}>
               <option value="">Semua Kategori</option>
               {categoryRows.map((c) => <option key={c.id} value={c.name}>{c.name}</option>)}
             </select>
-            <select name="sort" defaultValue={sort} style={{ width: 'auto' }}>
+            <select name="sort" defaultValue={sort} aria-label="Urutkan" style={{ width: 'auto' }}>
               <option value="newest">Terbaru</option>
               <option value="oldest">Terlama</option>
               <option value="title-asc">A-Z</option>
