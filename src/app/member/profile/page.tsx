@@ -97,8 +97,8 @@ export default function ProfilePage() {
           {(profile.name ?? 'A').trim().charAt(0).toUpperCase()}
         </div>
         <div style={{ minWidth: 0, flex: 1 }}>
-          <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 24, fontWeight: 400, margin: 0 }}>{profile.name}</h1>
-          <p style={{ margin: '2px 0 0', color: 'var(--muted)', fontSize: 14 }}>{profile.email}</p>
+          <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 24, fontWeight: 400, margin: 0, overflowWrap: 'anywhere' }}>{profile.name}</h1>
+          <p style={{ margin: '2px 0 0', color: 'var(--muted)', fontSize: 14, overflowWrap: 'anywhere' }}>{profile.email}</p>
           <span className="badge" style={{ marginTop: 8 }}>
             {profile.status ? 'Aktif' : 'Nonaktif'}
             {' · '}

@@ -291,18 +291,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       )}
 
       <div style={{ display: 'flex', flex: 1, minHeight: 0 }}>
-        <aside
-          className="sidebar"
-          style={{
-            position: 'sticky',
-            top: 0,
-            height: '100vh',
-            padding: 16,
-            display: 'flex',
-            flexDirection: 'column',
-            overflowY: 'auto',
-          }}
-        >
+        <aside className="sidebar">
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 18 }}>
             <Link
               href="/dashboard"

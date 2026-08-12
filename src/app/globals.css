@@ -198,7 +198,18 @@ input[type='date'], input[type='number'], input[type='search'], select, textarea
 .badge .dot { width: 6px; height: 6px; border-radius: 999px; background: currentColor; }
 
 /* ─── Layout / nav ─────────────────────────────────────────────────── */
-.sidebar { width: 256px; border-right: 1px solid var(--border); background: var(--surface); }
+.sidebar {
+  width: 256px;
+  border-right: 1px solid var(--border);
+  background: var(--surface);
+  display: flex;
+  flex-direction: column;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  padding: 16px;
+  overflow-y: auto;
+}
 .nav-item {
   display: flex; align-items: center; gap: 10px;
   padding: 9px 12px; border-radius: 10px;
@@ -386,8 +397,13 @@ input[type='date'], input[type='number'], input[type='search'], select, textarea
 
 @media (max-width: 640px) {
   /* Everything stacks to one column on phones. */
-  .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+  .grid-2, .grid-3 { grid-template-columns: 1fr; }
+  /* Book catalog & stat cards stay in a 2-column grid on phones (reference). */
+  .grid-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .container { padding: 16px; }
+}
+@media (max-width: 380px) {
+  .grid-4 { grid-template-columns: 1fr; }
 }
 
 /* Small-phone polish: keep stat values and cards from feeling cramped. */
