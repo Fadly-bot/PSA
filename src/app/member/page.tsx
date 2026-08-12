@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { authClient } from '@/lib/auth-client';
 
 type Stats = Record<string, string | number>;
 type RecentBorrowing = {
@@ -30,8 +31,16 @@ export default function MemberHomePage() {
   const [recent, setRecent] = useState<RecentBorrowing[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [user, setUser] = useState<{ name?: string } | null>(null);
 
   useEffect(() => {
+    authClient
+      .getSession()
+      .then((s) => {
+        const u = (s as any)?.user ?? (s as any)?.data?.user ?? null;
+        setUser(u);
+      })
+      .catch(() => setUser(null));
     fetch('/api/dashboard')
       .then((r) => r.json())
       .then((d) => {
@@ -134,16 +143,56 @@ export default function MemberHomePage() {
     ),
   };
 
+  const firstName = (user?.name ?? '').trim().split(/\s+/)[0] || 'Anggota';
+  const today = new Date().toLocaleDateString('id-ID', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  });
+
   return (
     <div>
-      <div className="section-header" style={{ marginTop: 8 }}>
+      {/* Greeting — reference member dashboard shows a personal welcome. */}
+      <div
+        className="card"
+        style={{
+          marginTop: 8,
+          marginBottom: 20,
+          padding: '22px 24px',
+          background: 'linear-gradient(135deg, var(--primary-dark), var(--primary))',
+          border: 'none',
+          color: '#fff',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 12,
+          flexWrap: 'wrap',
+        }}
+      >
+        <div>
+          <div style={{ fontSize: 13, opacity: 0.85, fontWeight: 700 }}>{today}</div>
+          <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 26, fontWeight: 400, margin: '2px 0 0', lineHeight: 1.2 }}>
+            Halo, {firstName}! 👋
+          </h2>
+          <p style={{ margin: '6px 0 0', fontSize: 14, opacity: 0.92 }}>
+            Selamat datang kembali di area anggota. Nikmati membaca!
+          </p>
+        </div>
+        <Link
+          href="/member/books"
+          className="btn"
+          style={{ background: '#fff', color: 'var(--primary-dark)', flexShrink: 0 }}
+        >
+          Cari Buku
+        </Link>
+      </div>
+
+      <div className="section-header">
         <div>
           <h2>Beranda Anggota</h2>
           <p>Ringkasan aktivitas membaca dan peminjaman Anda.</p>
         </div>
-        <Link href="/member/books" className="btn">
-          Cari Buku
-        </Link>
       </div>
 
       <div className="grid grid-4" style={{ marginBottom: 20 }}>

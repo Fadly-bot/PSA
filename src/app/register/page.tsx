@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { authClient, getAuthErrorMessage } from '@/lib/auth-client';
 
@@ -56,6 +57,15 @@ export default function RegisterPage() {
         }}
       >
         <div style={{ textAlign: 'center', marginBottom: 24 }}>
+          <Link href="/" aria-label="TBM Semesta Alam — Beranda" style={{ display: 'inline-flex', lineHeight: 0, marginBottom: 14 }}>
+            <Image
+              src="/logo-tbm-semesta-alam-nav.png"
+              alt="TBM Semesta Alam"
+              width={1233}
+              height={578}
+              style={{ height: 40, width: 'auto' }}
+            />
+          </Link>
           <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 28, fontWeight: 400, margin: '0 0 4px' }}>
             Daftar Akun
           </h1>

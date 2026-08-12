@@ -14,13 +14,14 @@
   --text-subtle: #4a4540;
 
   --primary: #2d6a4f;
-  --primary-dark: #1e4d39;
+  --primary-dark: #1b4332;
   --primary-hover: #245a42;
   --primary-light: #e8f5ee;
   --primary-100: #d1ead8;
   --secondary: #52b788;
-  --accent: #e76f51;
-  --accent-light: #fdf0ec;
+  --accent: #d4a373;
+  --accent-dark: #b98a5a;
+  --accent-light: #fbf3e7;
 
   --success: #2d6a4f;
   --success-bg: #e8f5ee;
@@ -573,18 +574,47 @@ input[type='date'], input[type='number'], input[type='search'], select, textarea
 
 /* Hero (homepage). */
 .hero {
-  background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 60%, #3f8f6d 100%);
+  background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 55%, #3f8f6d 100%);
   color: #fff;
-  padding: 56px 0;
+  padding: 64px 0;
+  position: relative;
+  overflow: hidden;
+}
+.hero::after {
+  /* Subtle organic texture — reference editorial feel without busy gradients. */
+  content: '';
+  position: absolute;
+  right: -120px;
+  top: -120px;
+  width: 380px;
+  height: 380px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.08), transparent 65%);
+  pointer-events: none;
+}
+.hero .hero-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.85);
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  padding: 6px 14px;
+  border-radius: 999px;
+  margin: 0 0 16px;
 }
 .hero h1 {
   font-family: var(--font-display);
-  font-size: clamp(30px, 5.5vw, 46px);
+  font-size: clamp(32px, 5.5vw, 48px);
   font-weight: 400;
   margin: 0 0 12px;
-  line-height: 1.15;
+  line-height: 1.12;
 }
-.hero p { font-size: 17px; opacity: 0.92; margin: 0 0 28px; }
+.hero p { font-size: 17px; opacity: 0.92; margin: 0 auto 28px; max-width: 620px; }
 .hero .search-box {
   display: flex;
   gap: 8px;
@@ -618,6 +648,45 @@ input[type='date'], input[type='number'], input[type='search'], select, textarea
   transition: background 0.15s ease;
 }
 .hero .search-box button:hover { background: var(--primary-hover); }
+
+/* Homepage stats strip (reference stats section). */
+.stats-strip {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  margin: -34px 0 8px;
+  position: relative;
+  z-index: 2;
+}
+.stats-strip .stat {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+  box-shadow: var(--shadow-md);
+  text-align: center;
+}
+.stats-strip .stat .num {
+  font-family: var(--font-display);
+  font-size: 30px;
+  line-height: 1;
+  color: var(--primary);
+}
+.stats-strip .stat .lbl {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-top: 6px;
+}
+@media (max-width: 768px) {
+  .stats-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 0; }
+}
+@media (max-width: 480px) {
+  .stats-strip .stat { padding: 14px 12px; }
+  .stats-strip .stat .num { font-size: 24px; }
+}
 
 /* Footer. */
 .footer {

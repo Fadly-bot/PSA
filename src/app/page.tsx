@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { and, desc, eq, isNull, sql } from 'drizzle-orm';
 import { db } from '@/db/index';
-import { authors, books, categories } from '@/db/schema';
+import { authors, bookInventories, books, categories, members, users } from '@/db/schema';
 import { getSettings } from '@/server/settings';
 import PublicNavbar from '@/components/public-navbar';
 import BookCover from '@/components/book-cover';
@@ -11,7 +11,7 @@ export const dynamic = 'force-dynamic';
 /** Warm editorial palette for category tiles (Figma reference). */
 const TILE_COLORS = [
   '#2d6a4f',
-  '#e76f51',
+  '#d4a373',
   '#1e6fa8',
   '#c17a1d',
   '#7a4fa0',
@@ -23,7 +23,7 @@ const TILE_COLORS = [
 ];
 
 export default async function Home() {
-  const [latestBooks, categoryRows, settings] = await Promise.all([
+  const [latestBooks, categoryRows, settings, bookStats, memberCount] = await Promise.all([
     db
       .select({
         id: books.id,
@@ -53,10 +53,30 @@ export default async function Home() {
       .orderBy(categories.name)
       .limit(12),
     getSettings(),
+    db
+      .select({
+        totalBooks: sql<number>`count(*) FILTER (WHERE ${books.status} = 'active')`,
+        totalCopies: sql<number>`count(${bookInventories.id}) FILTER (WHERE ${bookInventories.status} = 'available')`,
+      })
+      .from(books)
+      .leftJoin(bookInventories, and(eq(bookInventories.bookId, books.id), isNull(bookInventories.deletedAt)))
+      .where(isNull(books.deletedAt)),
+    db
+      .select({ count: sql<number>`count(*)` })
+      .from(members)
+      .innerJoin(users, eq(members.userId, users.id))
+      .where(and(eq(members.status, true), isNull(users.deletedAt))),
   ]);
 
   const libraryName = String(settings.libraryName || 'TBM Semesta Alam');
   const libraryAddress = String(settings.libraryAddress || '');
+
+  const statItems = [
+    { num: Number(bookStats[0]?.totalBooks ?? 0), label: 'Judul Buku' },
+    { num: categoryRows.length, label: 'Kategori' },
+    { num: Number(bookStats[0]?.totalCopies ?? 0), label: 'Eksemplar Tersedia' },
+    { num: Number(memberCount[0]?.count ?? 0), label: 'Anggota Aktif' },
+  ];
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
@@ -65,6 +85,7 @@ export default async function Home() {
       {/* Hero */}
       <section className="hero">
         <div className="container" style={{ textAlign: 'center', maxWidth: 760 }}>
+          <span className="hero-eyebrow">🌿 Taman Bacaan Masyarakat</span>
           <h1>Selamat Datang di {libraryName}</h1>
           <p>
             Telusuri koleksi buku, penulis, dan kategori perpustakaan kami. Gratis untuk semua.
@@ -80,6 +101,18 @@ export default async function Home() {
           </form>
         </div>
       </section>
+
+      {/* Stats strip — reference stats section */}
+      <div className="container">
+        <div className="stats-strip">
+          {statItems.map((s) => (
+            <div key={s.label} className="stat">
+              <div className="num">{s.num.toLocaleString('id-ID')}</div>
+              <div className="lbl">{s.label}</div>
+            </div>
+          ))}
+        </div>
+      </div>
 
       {/* Latest books */}
       <main className="container" style={{ flex: 1 }}>

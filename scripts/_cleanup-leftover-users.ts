@@ -11,7 +11,7 @@ import {
 } from '../src/db/schema';
 import { or, ilike, inArray } from 'drizzle-orm';
 
-const patterns = ['e2e.%', 'e2e-%', 'staff-e2e-%', 'member.e2e.%', 'member-e2e-%', 'membere2e.%'];
+const patterns = ['e2e.%', 'e2e-%', 'staff-e2e-%', 'member.e2e.%', 'member-e2e-%', 'membere2e.%', 'ui.check.%'];
 
 async function main() {
   const rows = await db.select({ id: users.id, email: users.email }).from(users)
