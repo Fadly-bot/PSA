@@ -124,6 +124,7 @@ export default function HistoryPage() {
           <thead>
             <tr>
               <th>Buku</th>
+              <th>No Pinjam</th>
               <th>Tgl Pinjam</th>
               <th>Jatuh Tempo</th>
               <th>Tgl Kembali</th>
@@ -145,6 +146,9 @@ export default function HistoryPage() {
                     ) : (
                       b.borrowCode
                     )}
+                  </td>
+                  <td data-label="No Pinjam" style={{ fontWeight: 600 }}>
+                    {b.borrowCode}
                   </td>
                   <td data-label="Tgl Pinjam">{b.borrowDate}</td>
                   <td data-label="Jatuh Tempo">{b.dueDate}</td>

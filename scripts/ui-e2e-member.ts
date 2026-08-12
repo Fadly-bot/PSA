@@ -10,7 +10,7 @@
  * Part 1 writes /tmp/tbm-member-state.json (email, password, borrowCode)
  * consumed by part 2 and by the API/DB verification script.
  */
-import { chromium, type Browser, type Page } from 'playwright-core';
+import { chromium, type Page } from 'playwright-core';
 import { writeFileSync, existsSync, mkdirSync, readFileSync } from 'node:fs';
 
 const BASE = 'http://localhost:3000';
@@ -119,11 +119,31 @@ async function catalogFlow() {
     return;
   }
 
+  // Books load async after the search box renders — wait for the first card link.
   const bookLinks = page.locator('a[href^="/books/"]');
-  const count = await bookLinks.count();
-  check(count >= 1, 'daftar buku muncul (card link ke detail)', `links=${count}`);
+  let count = 0;
+  try {
+    await bookLinks.first().waitFor({ state: 'visible', timeout: 20000 });
+    count = await bookLinks.count();
+    check(count >= 1, 'daftar buku muncul (card link ke detail)', `links=${count}`);
+  } catch {
+    count = await bookLinks.count().catch(() => 0);
+    check(false, 'daftar buku muncul (card link ke detail)', `links=${count}`);
+  }
 
-  // Covers: find <img> elements that are not broken.
+  // Covers: wait for lazy images to settle, then find <img> elements that are not broken.
+  // (loading="lazy" means below-fold covers may still be pending right after render.)
+  await page.waitForTimeout(2500);
+  await page.evaluate(async () => {
+    await Promise.all(
+      Array.from(document.images).map((img) =>
+        img.complete ? Promise.resolve() : new Promise((resolve) => {
+          img.addEventListener('load', resolve, { once: true });
+          img.addEventListener('error', resolve, { once: true });
+        }),
+      ),
+    );
+  }).catch(() => {});
   const imgs = page.locator('img');
   const imgCount = await imgs.count();
   let brokenImgs = 0;
@@ -151,7 +171,7 @@ async function catalogFlow() {
   await page.close();
 }
 
-async function borrowFlow(email: string) {
+async function borrowFlow(_email: string) {
   const page = await newPage();
   console.log('\n-- 3. DETAIL BUKU + PINJAM --');
   // Try the two books known to have available copies.
@@ -212,7 +232,13 @@ async function myBooksFlow(expectedTitle: string) {
   check(histOk, 'halaman Riwayat (/member/history) dimuat');
 
   await page.goto(`${BASE}/member/fines`, { waitUntil: 'domcontentloaded', timeout: 30000 });
-  const finesOk = await page.locator('h2:has-text("Denda"), text=Tidak ada denda').first().waitFor({ timeout: 45000 }).then(() => true).catch(() => false);
+  // Empty state renders as p.title "Tidak ada denda"; with fines it renders h2 "Denda".
+  const finesOk = await page
+    .locator('h2:has-text("Denda"), .empty-state p.title:has-text("denda")')
+    .first()
+    .waitFor({ timeout: 45000 })
+    .then(() => true)
+    .catch(() => false);
   check(finesOk, 'halaman Denda (/member/fines) dimuat (empty state OK)');
 
   await page.close();
@@ -255,7 +281,7 @@ async function logoutFlow() {
 
   await page.goto(`${BASE}/member`, { waitUntil: 'domcontentloaded', timeout: 30000 });
   try {
-    await page.waitForURL('**/login', { timeout: 12000 });
+    await page.waitForURL((u) => u.pathname === '/login', { timeout: 12000 });
     check(true, 'setelah logout, /member → /login', page.url());
   } catch {
     check(false, 'setelah logout, /member → /login', page.url());
@@ -263,7 +289,7 @@ async function logoutFlow() {
 
   await page.goto(`${BASE}/member/my-books`, { waitUntil: 'domcontentloaded', timeout: 30000 });
   try {
-    await page.waitForURL('**/login', { timeout: 12000 });
+    await page.waitForURL((u) => u.pathname === '/login', { timeout: 12000 });
     check(true, 'setelah logout, /member/my-books → /login', page.url());
   } catch {
     check(false, 'setelah logout, /member/my-books → /login', page.url());
@@ -277,7 +303,7 @@ async function verifyFlow() {
     process.exit(1);
   }
   const state = JSON.parse(readFileSync(STATE_FILE, 'utf8')) as { email: string; password: string; borrowCode: string; title: string };
-  const page = await newPage(browser);
+  const page = await newPage();
   console.log('\n-- 7. VERIFIKASI SETELAH PENGEMBALIAN (login ulang) --');
   await page.goto(`${BASE}/login`, { waitUntil: 'domcontentloaded', timeout: 30000 });
   await page.waitForSelector('#login-email', { timeout: 15000 });

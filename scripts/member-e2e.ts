@@ -31,6 +31,9 @@ import { eq, inArray, and, isNull, or } from 'drizzle-orm';
 const BASE = 'http://localhost:3000';
 const MEMBER_EMAIL = process.argv[2];
 const PASSWORD = process.argv[3] ?? 'MemberTest123!';
+// When set, skip the final cleanup so the UI verify pass (ui-e2e-member.ts -- verify)
+// can still log in and inspect returned/history/fines state before cleanup.
+const KEEP_DATA = process.env.KEEP_DATA === '1';
 
 let pass = 0;
 let fail = 0;
@@ -279,7 +282,11 @@ async function main() {
   }
 
   // ── SUMMARY ─────────────────────────────────────────────────────────
-  await cleanup();
+  if (KEEP_DATA) {
+    console.log('KEEP_DATA=1 → cleanup dilewati (test data dipertahankan untuk UI verify)');
+  } else {
+    await cleanup();
+  }
   console.log(`\n=== HASIL MEMBER E2E: ${pass} PASS, ${fail} FAIL ===`);
   if (failures.length) console.log('Gagal:', failures.join(' | '));
   process.exit(fail > 0 ? 1 : 0);
