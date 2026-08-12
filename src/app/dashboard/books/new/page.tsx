@@ -17,6 +17,7 @@ export default function NewBookPage() {
   const [publisherId, setPublisherId] = useState('');
   const [categoryId, setCategoryId] = useState('');
   const [status, setStatus] = useState<'active' | 'inactive'>('active');
+  const [stock, setStock] = useState('');
   const [coverImage, setCoverImage] = useState('');
   const [coverPreview, setCoverPreview] = useState('');
   const [uploading, setUploading] = useState(false);
@@ -79,6 +80,18 @@ export default function NewBookPage() {
     e.preventDefault();
     setLoading(true);
     setError(null);
+
+    // Validasi Stok: boleh kosong (0 eksemplar), harus bilangan bulat >= 0.
+    let stockNum = 0;
+    if (stock.trim() !== '') {
+      stockNum = Number(stock);
+      if (!Number.isInteger(stockNum) || stockNum < 0) {
+        setError('Stok harus berupa angka bulat yang tidak negatif.');
+        setLoading(false);
+        return;
+      }
+    }
+
     try {
       const res = await fetch('/api/books', {
         method: 'POST',
@@ -96,6 +109,7 @@ export default function NewBookPage() {
           categoryId: categoryId || null,
           status,
           coverImage: coverImage || null,
+          stock: stockNum,
         }),
       });
       const data = await res.json().catch(() => ({}));
@@ -192,12 +206,27 @@ export default function NewBookPage() {
                 </select>
               </div>
             </div>
-            <div>
-              <label style={labelStyle}>Status Katalog</label>
-              <select value={status} onChange={(e) => setStatus(e.target.value as 'active' | 'inactive')} style={inputStyle}>
-                <option value="active">Aktif</option>
-                <option value="inactive">Nonaktif</option>
-              </select>
+            <div className="form-grid form-grid-2">
+              <div>
+                <label style={labelStyle}>Status Katalog</label>
+                <select value={status} onChange={(e) => setStatus(e.target.value as 'active' | 'inactive')} style={inputStyle}>
+                  <option value="active">Aktif</option>
+                  <option value="inactive">Nonaktif</option>
+                </select>
+              </div>
+              <div>
+                <label style={labelStyle}>Stok</label>
+                <input
+                  type="number"
+                  value={stock}
+                  onChange={(e) => setStock(e.target.value)}
+                  min={0}
+                  step={1}
+                  placeholder="Masukkan jumlah stok"
+                  style={inputStyle}
+                />
+                <p style={{ fontSize: 12, color: 'var(--muted)', margin: '6px 0 0' }}>Jumlah eksemplar fisik buku. Kosongkan untuk 0.</p>
+              </div>
             </div>
           </div>
         </div>

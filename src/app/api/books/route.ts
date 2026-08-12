@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { and, desc, eq, ilike, inArray, isNull, or, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import { db } from '@/db/index';
-import { authors, bookInventories, books, categories, publishers } from '@/db/schema';
+import { authors, bookInventories, bookSources, books, categories, publishers } from '@/db/schema';
 import { getCurrentUser, hasPermission } from '@/server/auth-utils';
 import { createAuditLog } from '@/server/audit';
 import { slugify } from '@/lib/utils';
@@ -29,10 +29,23 @@ const createBookSchema = z.object({
   language: z.string().trim().min(2, 'Bahasa minimal 2 karakter').max(50).nullable().optional(),
   pages: z.number().int().min(1).nullable().optional(),
   status: z.enum(['active', 'inactive']).optional(),
+  // Jumlah eksemplar fisik (book_inventories) yang dibuat bersamaan dengan buku.
+  stock: z.number().int().min(0, 'Stok tidak boleh negatif').max(1000, 'Stok maksimal 1.000 eksemplar').optional(),
 });
 
 function isValidUuid(value: string | null | undefined): value is string {
   return !!value && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
+}
+
+/**
+ * Build `count` inventory codes in the existing INV-YYYY-XXXX family.
+ * A per-batch counter suffix keeps every code unique even when several
+ * copies are generated within the same millisecond.
+ */
+function buildInventoryCodes(count: number): string[] {
+  const year = new Date().getFullYear();
+  const base = Date.now().toString(36).toUpperCase();
+  return Array.from({ length: count }, (_, i) => `INV-${year}-${base}-${i + 1}`);
 }
 
 /** Build a book select shape joined with master data + inventory counts. */
@@ -288,7 +301,63 @@ export async function POST(request: Request) {
       if (!(key in (body ?? {}))) delete (values as Record<string, unknown>)[key];
     }
 
-    const [row] = await db.insert(books).values(values as typeof books.$inferInsert).returning();
+    const stock = data.stock ?? 0;
+
+    // Create the book and (optionally) its physical copies atomically.
+    const row = await db.transaction(async (tx) => {
+      const [bookRow] = await tx.insert(books).values(values as typeof books.$inferInsert).returning();
+
+      // Stok diimplementasikan sebagai eksemplar fisik (book_inventories),
+      // bukan kolom `stock` pada tabel books.
+      if (stock > 0) {
+        // book_inventories.source_id wajib — gunakan sumber pertama yang ada,
+        // atau buat sumber default "Umum" bila belum ada satupun.
+        const [source] = await tx
+          .select({ id: bookSources.id })
+          .from(bookSources)
+          .orderBy(bookSources.name)
+          .limit(1);
+        let sourceId = source?.id;
+        if (!sourceId) {
+          const [created] = await tx
+            .insert(bookSources)
+            .values({ name: 'Umum', description: 'Sumber default untuk buku baru.' })
+            .returning({ id: bookSources.id });
+          sourceId = created.id;
+        }
+
+        // Kode inventaris unik: buat satu per eksemplar, lalu re-roll kode
+        // yang bentrok dengan data yang sudah ada di database.
+        let codes = buildInventoryCodes(stock);
+        const existing = await tx
+          .select({ inventoryCode: bookInventories.inventoryCode })
+          .from(bookInventories)
+          .where(inArray(bookInventories.inventoryCode, codes));
+        if (existing.length > 0) {
+          const taken = new Set(existing.map((e) => e.inventoryCode));
+          const year = new Date().getFullYear();
+          codes = codes.map((code) => {
+            while (taken.has(code)) {
+              code = `INV-${year}-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
+            }
+            taken.add(code);
+            return code;
+          });
+        }
+
+        await tx.insert(bookInventories).values(
+          codes.map((inventoryCode) => ({
+            inventoryCode,
+            bookId: bookRow.id,
+            sourceId,
+            condition: 'good' as const,
+            status: 'available' as const,
+          })),
+        );
+      }
+
+      return bookRow;
+    });
 
     await createAuditLog({
       userId: user.id,
@@ -296,6 +365,14 @@ export async function POST(request: Request) {
       module: 'BOOKS',
       description: `Tambah buku "${row.title}" (ISBN ${row.isbn})`,
     });
+    if (stock > 0) {
+      await createAuditLog({
+        userId: user.id,
+        action: 'CREATE',
+        module: 'BOOK_INVENTORIES',
+        description: `Tambah ${stock} inventaris otomatis untuk buku "${row.title}"`,
+      });
+    }
 
     return NextResponse.json(row, { status: 201 });
   } catch (error: any) {

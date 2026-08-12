@@ -80,6 +80,7 @@ Menambahkan buku baru (bibliografi judul).
 | publisherId | ✅            |
 | status      | ❌ (otomatis: active) |
 | coverImage  | ❌            |
+| stock       | ❌ (default 0 → jumlah eksemplar/inventaris yang dibuat otomatis) |
 
 ### Validation
 
@@ -87,11 +88,12 @@ Menambahkan buku baru (bibliografi judul).
 * Judul wajib.
 * Tahun terbit valid.
 * Relasi harus valid.
+* `stock` (opsional): bilangan bulat, `min 0`, `max 1.000`. Nilai negatif ditolak.
 
 ### Business Rules
 
 * Buku hanya menyimpan informasi bibliografi.
-* Stok dan lokasi rak tidak diisi pada form Buku; dikelola melalui `createBookInventory()`.
+* **Stok** pada form Tambah Buku (Admin/Petugas) merepresentasikan jumlah eksemplar fisik. Saat `stock > 0`, sistem otomatis membuat `book_inventories` berstatus `available` sebanyak nilai stok dengan kode inventaris unik (`INV-YYYY-…`), menggunakan Sumber Buku default (sumber pertama yang ada, atau "Umum" bila belum ada satupun). Lokasi rak tetap dikelola melalui `createBookInventory()`.
 * Status default = `active`.
 * Slug dibuat otomatis jika kosong.
 
