@@ -5,6 +5,7 @@ import { and, eq, isNull } from 'drizzle-orm';
 import { db } from '@/db/index';
 import { authors, bookInventories, books, categories, publishers, shelves } from '@/db/schema';
 import { SITE_URL } from '@/app/layout';
+import { getCurrentUser } from '@/server/auth-utils';
 import PublicNavbar from '@/components/public-navbar';
 import BorrowPanel from '@/components/borrow-panel';
 import BookCover from '@/components/book-cover';
@@ -93,7 +94,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
 export default async function BookDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const book = await getBook(slug);
+  const [currentUser, book] = await Promise.all([getCurrentUser(), getBook(slug)]);
   if (!book) notFound();
 
   const statusLabel: Record<string, string> = {
@@ -106,7 +107,11 @@ export default async function BookDetailPage({ params }: { params: Promise<{ slu
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-      <PublicNavbar active="/books" />
+      <PublicNavbar
+        active="/books"
+        initialUser={currentUser ? { name: currentUser.name } : null}
+        initialRole={currentUser?.role ?? null}
+      />
 
       <main className="container" style={{ flex: 1 }}>
         <nav style={{ fontSize: 13, color: 'var(--muted)', margin: '20px 0' }}>

@@ -27,13 +27,26 @@ const STAFF_LINKS: NavLink[] = [
   { href: '/books', label: 'Katalog' },
 ];
 
-export default function PublicNavbar({ active }: { active?: string }) {
+type PublicNavbarProps = {
+  active?: string;
+  /** Auth state resolved on the server — avoids flashing guest CTAs to a
+   *  logged-in user while the client session check is still in flight. */
+  initialUser?: { name?: string } | null;
+  initialRole?: string | null;
+};
+
+export default function PublicNavbar({
+  active,
+  initialUser = null,
+  initialRole = null,
+}: PublicNavbarProps) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
-  const [user, setUser] = useState<{ name?: string } | null>(null);
-  const [role, setRole] = useState<string>('');
-  const [checked, setChecked] = useState(false);
+  const [user, setUser] = useState<{ name?: string } | null>(initialUser);
+  const [role, setRole] = useState<string>(initialRole ?? '');
+  const [checked, setChecked] = useState(!!initialUser);
 
+  // Keep the client session in sync with reality (login/logout without reload).
   useEffect(() => {
     authClient
       .getSession()
@@ -56,11 +69,35 @@ export default function PublicNavbar({ active }: { active?: string }) {
       .finally(() => setChecked(true));
   }, []);
 
+  // Close the mobile menu when crossing into the desktop breakpoint so a
+  // stale hamburger/drawer never lingers on a desktop layout.
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 769px)');
+    const onMq = (e: MediaQueryListEvent) => {
+      if (e.matches) setOpen(false);
+    };
+    mq.addEventListener('change', onMq);
+    return () => mq.removeEventListener('change', onMq);
+  }, []);
+
+  // Close the drawer whenever the route changes.
+  useEffect(() => {
+    setOpen(false);
+  }, [pathname]);
+
   const isMember = role === 'member';
   const links = !user ? GUEST_LINKS : isMember ? MEMBER_LINKS : STAFF_LINKS;
 
-  const isActive = (href: string) =>
-    (active ?? pathname) === href || (href !== '/' && (active ?? pathname).startsWith(href));
+  // Active link = the deepest href that matches the current route, so sibling
+  // or parent links never stay highlighted at the same time (e.g. "Buku Saya"
+  // and "Area Anggota" together). Exact match wins over prefix match.
+  const current = active ?? pathname;
+  const activeHref =
+    [...links.map((l) => l.href)].sort((a, b) => b.length - a.length).find(
+      (href) => current === href || (href !== '/' && current.startsWith(href + '/')),
+    ) ?? null;
+
+  const isActive = (href: string) => href === activeHref;
 
   const close = () => setOpen(false);
 
@@ -147,59 +184,68 @@ export default function PublicNavbar({ active }: { active?: string }) {
         </button>
       </div>
 
-      {/* Mobile dropdown */}
+      {/* Mobile drawer (overlay + backdrop) */}
       {open && (
-        <nav
-          id="public-mobile-menu"
-          aria-label="Navigasi mobile"
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            padding: '4px 16px 14px',
-            gap: 2,
-            borderTop: '1px solid var(--border)',
-            background: 'var(--surface)',
-          }}
-        >
-          {links.map((l) => (
-            <Link
-              key={l.href}
-              href={l.href}
-              onClick={close}
-              style={{
-                padding: '10px 12px',
-                borderRadius: 8,
-                color: 'var(--text)',
-                fontWeight: isActive(l.href) ? 700 : 500,
-                background: isActive(l.href) ? 'var(--primary-light)' : 'transparent',
-              }}
-            >
-              {l.label}
-            </Link>
-          ))}
-          <div style={{ borderTop: '1px solid var(--border)', margin: '8px 0' }} />
-          {checked && user ? (
-            <>
-              {!isMember && (
-                <Link href="/dashboard" onClick={close} style={{ padding: '10px 12px', borderRadius: 8, color: 'var(--text)', fontWeight: 600 }}>
-                  Dasbor
-                </Link>
-              )}
-              <button className="btn outline" onClick={onLogout} style={{ marginTop: 6, justifyContent: 'center' }}>
-                Keluar
+        <>
+          <div className="hamburger-backdrop" onClick={close} aria-hidden="true" />
+          <nav
+            id="public-mobile-menu"
+            className="hamburger-panel"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Navigasi mobile"
+            style={{ display: 'flex', flexDirection: 'column' }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+              <span style={{ fontWeight: 800, fontSize: 15 }}>Menu</span>
+              <button
+                aria-label="Tutup menu"
+                onClick={close}
+                style={{ border: 'none', background: 'transparent', fontSize: 22, cursor: 'pointer', color: 'var(--muted)', lineHeight: 1 }}
+              >
+                ×
               </button>
-            </>
-          ) : (
-            <div style={{ display: 'flex', gap: 8, marginTop: 6 }}>
-              <Link href="/login" onClick={close} className="btn outline" style={{ flex: 1, justifyContent: 'center' }}>
-                Masuk
-              </Link>
-              <Link href="/register" onClick={close} className="btn" style={{ flex: 1, justifyContent: 'center' }}>
-                Daftar
-              </Link>
             </div>
-          )}
-        </nav>
+            {links.map((l) => (
+              <Link
+                key={l.href}
+                href={l.href}
+                onClick={close}
+                style={{
+                  padding: '10px 12px',
+                  borderRadius: 8,
+                  color: 'var(--text)',
+                  fontWeight: isActive(l.href) ? 700 : 500,
+                  background: isActive(l.href) ? 'var(--primary-light)' : 'transparent',
+                }}
+              >
+                {l.label}
+              </Link>
+            ))}
+            <div style={{ borderTop: '1px solid var(--border)', margin: '10px 0' }} />
+            {checked && user ? (
+              <>
+                {!isMember && (
+                  <Link href="/dashboard" onClick={close} style={{ padding: '10px 12px', borderRadius: 8, color: 'var(--text)', fontWeight: 600 }}>
+                    Dasbor
+                  </Link>
+                )}
+                <button className="btn outline" onClick={onLogout} style={{ marginTop: 6, justifyContent: 'center' }}>
+                  Keluar
+                </button>
+              </>
+            ) : (
+              <div style={{ display: 'flex', gap: 8, marginTop: 6 }}>
+                <Link href="/login" onClick={close} className="btn outline" style={{ flex: 1, justifyContent: 'center' }}>
+                  Masuk
+                </Link>
+                <Link href="/register" onClick={close} className="btn" style={{ flex: 1, justifyContent: 'center' }}>
+                  Daftar
+                </Link>
+              </div>
+            )}
+          </nav>
+        </>
       )}
     </header>
   );

@@ -4,6 +4,7 @@ import { and, asc, desc, eq, ilike, isNull, or, sql } from 'drizzle-orm';
 import { db } from '@/db/index';
 import { authors, bookInventories, books, categories, publishers } from '@/db/schema';
 import { SITE_URL } from '@/app/layout';
+import { getCurrentUser } from '@/server/auth-utils';
 import PublicNavbar from '@/components/public-navbar';
 import BookCover from '@/components/book-cover';
 
@@ -29,6 +30,7 @@ export default async function BooksPage({
 }: {
   searchParams: Promise<{ q?: string; category?: string; sort?: string; page?: string }>;
 }) {
+  const currentUser = await getCurrentUser();
   const params = await searchParams;
   const q = (params.q ?? '').trim().slice(0, 100);
   const category = (params.category ?? '').trim();
@@ -124,7 +126,11 @@ export default async function BooksPage({
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-      <PublicNavbar active="/books" />
+      <PublicNavbar
+        active="/books"
+        initialUser={currentUser ? { name: currentUser.name } : null}
+        initialRole={currentUser?.role ?? null}
+      />
 
       <main className="container" style={{ flex: 1 }}>
         <div className="section-header" style={{ marginTop: 12 }}>

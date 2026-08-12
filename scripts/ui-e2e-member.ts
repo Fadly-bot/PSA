@@ -77,19 +77,20 @@ async function registerFlow() {
   check(redirected, 'register berhasil + auto-login redirect → /member', page.url());
   if (!redirected) return;
   await page
-    .locator('text=Beranda Anggota')
+    .locator('text=Ringkasan Aktivitas')
     .first()
     .waitFor({ state: 'visible', timeout: 45000 })
     .catch(() => {});
-  check(await page.locator('text=Beranda Anggota').first().isVisible().catch(() => false), 'member dashboard menampilkan "Beranda Anggota"');
+  check(await page.locator('text=Ringkasan Aktivitas').first().isVisible().catch(() => false), 'member dashboard menampilkan "Ringkasan Aktivitas"');
 
-  // Dashboard elements.
-  const statLabels = ['Sedang Dipinjam', 'Sudah Dikembalikan', 'Terlambat', 'Denda'];
+  // Dashboard elements (REF1 labels).
+  const statLabels = ['Buku Dipinjam', 'Tenggat Waktu', 'Riwayat Peminjaman', 'Denda Aktif'];
   for (const label of statLabels) {
     check(await page.locator(`text=${label}`).first().isVisible().catch(() => false), `stat card "${label}" tampil`);
   }
+  check(await page.locator('text=Kartu Anggota').first().isVisible().catch(() => false), 'kartu anggota tampil');
   check(await page.locator('text=Cari Buku').first().isVisible().catch(() => false), 'tombol "Cari Buku" tampil');
-  check(await page.locator('text=Peminjaman Terbaru').first().isVisible().catch(() => false), 'section "Peminjaman Terbaru" tampil');
+  check(await page.locator('text=Riwayat Peminjaman Terbaru').first().isVisible().catch(() => false), 'section "Riwayat Peminjaman Terbaru" tampil');
 
   // No staff/admin menus on member area.
   const bodyText = await page.locator('body').innerText();

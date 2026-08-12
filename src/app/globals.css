@@ -321,6 +321,15 @@ input[type='date'], input[type='number'], input[type='search'], select, textarea
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 @keyframes slideIn { from { transform: translateX(-100%); } to { transform: translateX(0); } }
 
+/* Mobile drawers must never leak onto desktop layouts — even if the menu was
+   opened at a mobile width and the viewport later grows past the breakpoint. */
+@media (min-width: 769px) {
+  .hamburger-backdrop,
+  .hamburger-panel {
+    display: none !important;
+  }
+}
+
 /* Public book detail: cover + info side by side on desktop, stacked on mobile. */
 .detail-grid {
   display: grid;

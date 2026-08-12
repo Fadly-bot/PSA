@@ -138,6 +138,22 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [loading, setLoading] = useState(true);
   const [drawerOpen, setDrawerOpen] = useState(false);
 
+  // Never leave the mobile drawer mounted when the viewport grows past the
+  // mobile breakpoint (a stale hamburger/drawer must not linger on desktop).
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 769px)');
+    const onMq = (e: MediaQueryListEvent) => {
+      if (e.matches) setDrawerOpen(false);
+    };
+    mq.addEventListener('change', onMq);
+    return () => mq.removeEventListener('change', onMq);
+  }, []);
+
+  // Close the drawer whenever the route changes (client-side navigation).
+  useEffect(() => {
+    setDrawerOpen(false);
+  }, [pathname]);
+
   useEffect(() => {
     authClient
       .getSession()
@@ -159,8 +175,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       .finally(() => setLoading(false));
   }, []);
 
+  // Exact match wins for the dashboard root — `/dashboard/publishers` must
+  // only highlight "Penerbit", never "Dasbor". Child routes use prefix match.
   const isActive = (href: string) =>
-    pathname === href || pathname.startsWith(href + '/');
+    pathname === href || (href !== '/dashboard' && pathname.startsWith(href + '/'));
   const isAdmin = role === 'admin';
   const isStaff = isAdmin || role === 'staff';
 

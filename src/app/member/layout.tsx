@@ -32,6 +32,21 @@ export default function MemberLayout({ children }: { children: React.ReactNode }
       .catch(() => setUser(null));
   }, []);
 
+  // Close the mobile drawer when crossing into the desktop breakpoint.
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 769px)');
+    const onMq = (e: MediaQueryListEvent) => {
+      if (e.matches) setOpen(false);
+    };
+    mq.addEventListener('change', onMq);
+    return () => mq.removeEventListener('change', onMq);
+  }, []);
+
+  // Close the drawer whenever the route changes.
+  useEffect(() => {
+    setOpen(false);
+  }, [pathname]);
+
   const isActive = (href: string) =>
     pathname === href || (href !== '/member' && pathname.startsWith(href + '/'));
 
@@ -126,32 +141,41 @@ export default function MemberLayout({ children }: { children: React.ReactNode }
           </button>
         </div>
 
-        {/* Mobile dropdown */}
+        {/* Mobile drawer (overlay + backdrop) */}
         {open && (
-          <nav
-            id="member-mobile-menu"
-            aria-label="Navigasi anggota mobile"
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              padding: '4px 16px 14px',
-              gap: 2,
-              borderTop: '1px solid var(--border)',
-              background: 'var(--surface)',
-            }}
-          >
-            {renderLinks(true)}
-            <div style={{ borderTop: '1px solid var(--border)', margin: '8px 0' }} />
-            {user ? (
-              <button className="btn outline" onClick={onLogout} style={{ justifyContent: 'center' }}>
-                Keluar
-              </button>
-            ) : (
-              <Link href="/login" className="btn outline" style={{ justifyContent: 'center' }}>
-                Masuk
-              </Link>
-            )}
-          </nav>
+          <>
+            <div className="hamburger-backdrop" onClick={close} aria-hidden="true" />
+            <nav
+              id="member-mobile-menu"
+              className="hamburger-panel"
+              role="dialog"
+              aria-modal="true"
+              aria-label="Navigasi anggota mobile"
+              style={{ display: 'flex', flexDirection: 'column' }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                <span style={{ fontWeight: 800, fontSize: 15 }}>Menu Anggota</span>
+                <button
+                  aria-label="Tutup menu"
+                  onClick={close}
+                  style={{ border: 'none', background: 'transparent', fontSize: 22, cursor: 'pointer', color: 'var(--muted)', lineHeight: 1 }}
+                >
+                  ×
+                </button>
+              </div>
+              {renderLinks(true)}
+              <div style={{ borderTop: '1px solid var(--border)', margin: '10px 0' }} />
+              {user ? (
+                <button className="btn outline" onClick={onLogout} style={{ justifyContent: 'center' }}>
+                  Keluar
+                </button>
+              ) : (
+                <Link href="/login" className="btn outline" style={{ justifyContent: 'center' }}>
+                  Masuk
+                </Link>
+              )}
+            </nav>
+          </>
         )}
       </header>
 

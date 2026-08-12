@@ -3,6 +3,7 @@ import { and, desc, eq, isNull, sql } from 'drizzle-orm';
 import { db } from '@/db/index';
 import { authors, bookInventories, books, categories, members, users } from '@/db/schema';
 import { getSettings } from '@/server/settings';
+import { getCurrentUser } from '@/server/auth-utils';
 import PublicNavbar from '@/components/public-navbar';
 import BookCover from '@/components/book-cover';
 
@@ -23,7 +24,9 @@ const TILE_COLORS = [
 ];
 
 export default async function Home() {
-  const [latestBooks, categoryRows, settings, bookStats, memberCount] = await Promise.all([
+  const [currentUser, latestBooks, categoryRows, settings, bookStats, memberCount] = await Promise.all([
+    getCurrentUser(),
+
     db
       .select({
         id: books.id,
@@ -78,9 +81,17 @@ export default async function Home() {
     { num: Number(memberCount[0]?.count ?? 0), label: 'Anggota Aktif' },
   ];
 
+  const isMember = currentUser?.role === 'member';
+  const isStaff = currentUser?.role === 'admin' || currentUser?.role === 'staff';
+  const firstName = (currentUser?.name ?? '').trim().split(/\s+/)[0] || 'Anggota';
+
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-      <PublicNavbar active="/" />
+      <PublicNavbar
+        active="/"
+        initialUser={currentUser ? { name: currentUser.name } : null}
+        initialRole={currentUser?.role ?? null}
+      />
 
       {/* Hero */}
       <section className="hero">
@@ -193,7 +204,7 @@ export default async function Home() {
           </div>
         </section>
 
-        {/* CTA */}
+        {/* CTA — guest gets the join CTA; authenticated users get their area. */}
         <section
           className="card"
           style={{
@@ -206,21 +217,44 @@ export default async function Home() {
             borderRadius: 20,
           }}
         >
-          <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 28, fontWeight: 400, margin: '0 0 8px' }}>
-            Bergabung dengan {libraryName}
-          </h2>
-          <p style={{ color: 'rgba(255,255,255,0.9)', margin: '0 auto 20px', maxWidth: 560 }}>
-            Daftar menjadi anggota dan nikmati akses membaca koleksi kami.
-            {libraryAddress ? ` Berlokasi di ${libraryAddress}.` : ''}
-          </p>
-          <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
-            <Link href="/register" className="btn" style={{ background: '#fff', color: 'var(--primary-dark)' }}>
-              Daftar Menjadi Anggota
-            </Link>
-            <Link href="/books" className="btn outline" style={{ borderColor: 'rgba(255,255,255,0.5)', color: '#fff' }}>
-              Lihat Katalog
-            </Link>
-          </div>
+          {isMember || isStaff ? (
+            <>
+              <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 28, fontWeight: 400, margin: '0 0 8px' }}>
+                Selamat datang kembali, {firstName}!
+              </h2>
+              <p style={{ color: 'rgba(255,255,255,0.9)', margin: '0 auto 20px', maxWidth: 560 }}>
+                {isMember
+                  ? 'Lanjutkan petualangan membaca Anda. Buku favorit menunggu di rak.'
+                  : 'Kelola perpustakaan dan layanan anggota dari dasbor Anda.'}
+              </p>
+              <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
+                <Link href={isMember ? '/member' : '/dashboard'} className="btn" style={{ background: '#fff', color: 'var(--primary-dark)' }}>
+                  {isMember ? 'Buka Area Anggota' : 'Buka Dasbor'}
+                </Link>
+                <Link href="/books" className="btn outline" style={{ borderColor: 'rgba(255,255,255,0.5)', color: '#fff' }}>
+                  Lihat Katalog
+                </Link>
+              </div>
+            </>
+          ) : (
+            <>
+              <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 28, fontWeight: 400, margin: '0 0 8px' }}>
+                Bergabung dengan {libraryName}
+              </h2>
+              <p style={{ color: 'rgba(255,255,255,0.9)', margin: '0 auto 20px', maxWidth: 560 }}>
+                Daftar menjadi anggota dan nikmati akses membaca koleksi kami.
+                {libraryAddress ? ` Berlokasi di ${libraryAddress}.` : ''}
+              </p>
+              <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
+                <Link href="/register" className="btn" style={{ background: '#fff', color: 'var(--primary-dark)' }}>
+                  Daftar Menjadi Anggota
+                </Link>
+                <Link href="/books" className="btn outline" style={{ borderColor: 'rgba(255,255,255,0.5)', color: '#fff' }}>
+                  Lihat Katalog
+                </Link>
+              </div>
+            </>
+          )}
         </section>
       </main>
 
@@ -243,8 +277,16 @@ export default async function Home() {
           </div>
           <div style={{ display: 'flex', gap: 16 }}>
             <Link href="/books">Katalog</Link>
-            <Link href="/login">Masuk</Link>
-            <Link href="/register">Daftar</Link>
+            {isMember || isStaff ? (
+              <Link href={isMember ? '/member' : '/dashboard'}>
+                {isMember ? 'Area Anggota' : 'Dasbor'}
+              </Link>
+            ) : (
+              <>
+                <Link href="/login">Masuk</Link>
+                <Link href="/register">Daftar</Link>
+              </>
+            )}
           </div>
           <div style={{ color: 'var(--muted)', fontSize: 13 }}>© {new Date().getFullYear()} {libraryName}</div>
         </div>
