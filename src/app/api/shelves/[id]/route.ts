@@ -103,8 +103,16 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
     }
 
     const [relatedInventories] = await db.select({ count: sql<number>`count(*)` }).from(bookInventories).where(eq(bookInventories.shelfId, id)).limit(1);
-    if (Number(relatedInventories?.count ?? 0) > 0) {
-      return NextResponse.json({ error: 'Rak masih digunakan oleh inventaris buku.' }, { status: 409 });
+    const shelfInUseCount = Number(relatedInventories?.count ?? 0);
+    if (shelfInUseCount > 0) {
+      return NextResponse.json(
+        {
+          error: `Rak buku tidak dapat dihapus karena masih digunakan oleh ${shelfInUseCount} inventaris buku. Ubah atau hapus penempatan inventaris terlebih dahulu, lalu coba lagi.`,
+          code: 'MASTER_DATA_IN_USE',
+          count: shelfInUseCount,
+        },
+        { status: 409 },
+      );
     }
 
     await db.delete(shelves).where(eq(shelves.id, id));

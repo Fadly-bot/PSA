@@ -88,8 +88,16 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
     }
 
     const [relatedBooks] = await db.select({ count: sql<number>`count(*)` }).from(books).where(eq(books.categoryId, id)).limit(1);
-    if (Number(relatedBooks?.count ?? 0) > 0) {
-      return NextResponse.json({ error: 'Kategori masih digunakan oleh buku.' }, { status: 409 });
+    const categoryInUseCount = Number(relatedBooks?.count ?? 0);
+    if (categoryInUseCount > 0) {
+      return NextResponse.json(
+        {
+          error: `Kategori tidak dapat dihapus karena masih digunakan oleh ${categoryInUseCount} buku. Ubah atau hapus relasi buku terlebih dahulu, lalu coba lagi.`,
+          code: 'MASTER_DATA_IN_USE',
+          count: categoryInUseCount,
+        },
+        { status: 409 },
+      );
     }
 
     await db.delete(categories).where(eq(categories.id, id));

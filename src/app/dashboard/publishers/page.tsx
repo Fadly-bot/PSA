@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import Toast, { useToast } from '@/components/toast';
 
 type Publisher = {
   id: string;
@@ -23,6 +24,7 @@ export default function PublishersPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const { toast, showToast } = useToast();
 
   const load = async (pageNum: number, query?: string) => {
     setLoading(true);
@@ -66,8 +68,9 @@ export default function PublishersPage() {
       }
       setItems((prev) => prev.filter((i) => i.id !== id));
       setTotal((t) => t - 1);
+      showToast({ type: 'success', message: 'Penerbit berhasil dihapus.' });
     } catch (e: any) {
-      alert(e?.message ?? 'Gagal menghapus.');
+      showToast({ type: 'error', message: e?.message ?? 'Gagal menghapus penerbit.' });
     } finally {
       setDeletingId(null);
     }
@@ -147,6 +150,7 @@ export default function PublishersPage() {
           </div>
         )}
       </div>
+      <Toast toast={toast} />
     </div>
   );
 }

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import Toast, { useToast } from '@/components/toast';
 
 type Category = {
   id: string;
@@ -20,6 +21,7 @@ export default function CategoriesPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const { toast, showToast } = useToast();
 
   const load = async (pageNum: number, query?: string) => {
     setLoading(true);
@@ -63,8 +65,9 @@ export default function CategoriesPage() {
       }
       setItems((prev) => prev.filter((i) => i.id !== id));
       setTotal((t) => t - 1);
+      showToast({ type: 'success', message: 'Kategori berhasil dihapus.' });
     } catch (e: any) {
-      alert(e?.message ?? 'Gagal menghapus.');
+      showToast({ type: 'error', message: e?.message ?? 'Gagal menghapus kategori.' });
     } finally {
       setDeletingId(null);
     }
@@ -140,6 +143,7 @@ export default function CategoriesPage() {
           </div>
         )}
       </div>
+      <Toast toast={toast} />
     </div>
   );
 }

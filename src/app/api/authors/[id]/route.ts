@@ -97,8 +97,16 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
     }
 
     const [relatedBooks] = await db.select({ count: sql<number>`count(*)` }).from(books).where(eq(books.authorId, id)).limit(1);
-    if (Number(relatedBooks?.count ?? 0) > 0) {
-      return NextResponse.json({ error: 'Penulis masih digunakan oleh buku.' }, { status: 409 });
+    const authorInUseCount = Number(relatedBooks?.count ?? 0);
+    if (authorInUseCount > 0) {
+      return NextResponse.json(
+        {
+          error: `Penulis tidak dapat dihapus karena masih digunakan oleh ${authorInUseCount} buku. Ubah atau hapus relasi buku terlebih dahulu, lalu coba lagi.`,
+          code: 'MASTER_DATA_IN_USE',
+          count: authorInUseCount,
+        },
+        { status: 409 },
+      );
     }
 
     await db.delete(authors).where(eq(authors.id, id));

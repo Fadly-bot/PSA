@@ -108,8 +108,16 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
     }
 
     const [relatedBooks] = await db.select({ count: sql<number>`count(*)` }).from(books).where(eq(books.publisherId, id)).limit(1);
-    if (Number(relatedBooks?.count ?? 0) > 0) {
-      return NextResponse.json({ error: 'Penerbit masih digunakan oleh buku.' }, { status: 409 });
+    const publisherInUseCount = Number(relatedBooks?.count ?? 0);
+    if (publisherInUseCount > 0) {
+      return NextResponse.json(
+        {
+          error: `Penerbit tidak dapat dihapus karena masih digunakan oleh ${publisherInUseCount} buku. Ubah atau hapus relasi buku terlebih dahulu, lalu coba lagi.`,
+          code: 'MASTER_DATA_IN_USE',
+          count: publisherInUseCount,
+        },
+        { status: 409 },
+      );
     }
 
     await db.delete(publishers).where(eq(publishers.id, id));
