@@ -4,6 +4,32 @@ import { db } from '@/db/index';
 import * as schema from '@/db/schema';
 
 /**
+ * Whether `origin` (an absolute URL) is served from a private/LAN address:
+ * localhost, 127.0.0.0/8, 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16.
+ * Used to trust phone access via the LAN IP (DHCP may change the exact IP,
+ * so a range check is more robust than hardcoding one address).
+ * Public origins are never trusted dynamically.
+ */
+function isPrivateNetworkOrigin(origin: string): boolean {
+  try {
+    const { hostname } = new URL(origin);
+    if (hostname === 'localhost' || hostname === '::1') return true;
+    if (!/^\d{1,3}(\.\d{1,3}){3}$/.test(hostname)) return false;
+    const octets = hostname.split('.').map(Number);
+    if (octets.some((o) => o < 0 || o > 255)) return false;
+    const [a, b] = octets;
+    return (
+      a === 127 ||
+      a === 10 ||
+      (a === 172 && b >= 16 && b <= 31) ||
+      (a === 192 && b === 168)
+    );
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Better Auth instance — wired to the Drizzle + PostgreSQL (postgres-js)
  * database. The `schema` option maps Better Auth's internal models
  * (`user`, `session`, `account`, `verification`) to the Drizzle table
@@ -25,12 +51,34 @@ export const auth = betterAuth({
    * is trusted automatically; add local dev and Vercel preview domains so
    * they are not rejected (previously the origin check returned 403 and the
    * browser surfaced this as "Failed to fetch").
+   *
+   * Dynamic: when the app is opened from a phone on the same Wi-Fi through a
+   * LAN IP (e.g. http://192.168.1.5:3000), the request's own origin is added
+   * when it is a private-network address. Without this, Better Auth rejects
+   * login/register from the phone with HTTP 403 INVALID_ORIGIN because the
+   * LAN origin is neither the baseURL nor listed in trustedOrigins.
    */
-  trustedOrigins: [
-    'http://localhost:3000',
-    'https://tbmsemesta-alam.vercel.app',
-    'https://*.vercel.app',
-  ],
+  trustedOrigins: (request) => {
+    const staticOrigins = [
+      'http://localhost:3000',
+      'https://tbmsemesta-alam.vercel.app',
+      'https://*.vercel.app',
+    ];
+    const origin =
+      request?.headers.get('origin') ?? request?.headers.get('referer') ?? '';
+    if (origin.trim()) {
+      try {
+        // Normalize referer-with-path (e.g. .../login) down to scheme://host:port.
+        const normalized = new URL(origin.trim()).origin;
+        if (isPrivateNetworkOrigin(normalized)) {
+          return [...staticOrigins, normalized];
+        }
+      } catch {
+        // Ignore malformed origins — never trust them dynamically.
+      }
+    }
+    return staticOrigins;
+  },
   database: drizzleAdapter(db, {
     provider: 'pg',
     schema: {

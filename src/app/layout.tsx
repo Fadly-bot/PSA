@@ -60,6 +60,10 @@ export const metadata: Metadata = {
     index: true,
     follow: true,
   },
+  // Google Search Console ownership verification.
+  verification: {
+    google: '-cy5mBXzMXkVxfFDKCe1mWDOFL-piIO8Vb1ZP2FSkqM',
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
