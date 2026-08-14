@@ -43,6 +43,7 @@ const TEST_USER_EMAILS = [
   'dbg.1786630228@gmail.com',           // DBG Tmp
   'dbg3.1786630411@gmail.com',          // DBG Tmp3
   'dbg4.1786630413552@gmail.com',       // DBG Tmp4
+  'amorf88@gmail.com',                  // Amor Fati (dikonfirmasi akun test oleh pemilik)
 ];
 
 let deleted = 0;

@@ -4,7 +4,11 @@
  * CRUD (categories, authors, publishers, shelves, book sources, books,
  * inventories), borrowing (create/list/detail/extend), return (on-time +
  * overdue -> fine), fine (list/pay), reports (json + csv), settings
- * (admin-only), dashboard stats, staff management (/api/users), audit logs.
+ * (admin-only), dashboard stats, staff management (/api/users), audit logs,
+ * SAFE master data delete (unused -> 200, active ref -> 409, soft-deleted
+ * ref -> detach + 200, source with borrowing history -> 409), transaction
+ * delete (cancel active, physical delete returned, delete via returns),
+ * member self-service borrow, and SEO/public pages (200/404/robots/sitemap).
  *
  * All test data uses a unique prefix and is cleaned up at the end.
  * Run: node --env-file-if-exists=.env.local --import tsx scripts/final-e2e.ts
@@ -499,6 +503,198 @@ async function main() {
   res = await api('/api/audit-logs?module=USERS', { headers: adminAuth });
   const modLogs = await res.json().catch(() => ({}));
   log(res.status === 200 && (modLogs.items ?? []).length > 0, 'GET /api/audit-logs?module=USERS', `HTTP ${res.status} | total=${modLogs.total}`);
+
+  // ── 15. SAFE DELETE MASTER DATA ─────────────────────────────────────
+  step('15. Safe delete master data');
+  // (a) Unused master data -> 200.
+  res = await api('/api/categories', { method: 'POST', headers: staffAuth, body: JSON.stringify({ name: `${P} Kategori Bebas` }) });
+  const freeCat = await res.json().catch(() => ({}));
+  if (freeCat?.id) categoryIds.push(freeCat.id);
+  log(res.status === 201, 'setup kategori bebas (unused)', `HTTP ${res.status}`);
+  res = await api(`/api/categories/${freeCat.id}`, { method: 'DELETE', headers: staffAuth });
+  log(res.status === 200, 'DELETE kategori tidak digunakan -> 200', `HTTP ${res.status}`);
+
+  // (b) Master data referenced by an ACTIVE book -> 409 + usage count.
+  res = await api(`/api/categories/${cat.id}`, { method: 'DELETE', headers: staffAuth });
+  const blockCat = await res.json().catch(() => ({}));
+  log(res.status === 409 && blockCat.code === 'MASTER_DATA_IN_USE' && Number(blockCat.count ?? 0) >= 1, 'DELETE kategori dipakai buku aktif -> 409 + count', `HTTP ${res.status} | code=${blockCat.code} count=${blockCat.count}`);
+
+  // (c) Master data referenced ONLY by a soft-deleted book -> detached + 200.
+  res = await api('/api/categories', { method: 'POST', headers: staffAuth, body: JSON.stringify({ name: `${P} Kategori Detach` }) });
+  const detachCat = await res.json().catch(() => ({}));
+  if (detachCat?.id) categoryIds.push(detachCat.id);
+  log(res.status === 201, 'setup kategori detach', `HTTP ${res.status}`);
+  res = await api('/api/books', {
+    method: 'POST', headers: staffAuth,
+    body: JSON.stringify({ title: `${P} Buku Detach`, isbn: `9781${ts.toString().slice(-8)}`, categoryId: detachCat.id, status: 'active' }),
+  });
+  const detachBook = await res.json().catch(() => ({}));
+  if (detachBook?.id) bookIds.push(detachBook.id);
+  log(res.status === 201, 'setup buku yang memakai kategori detach', `HTTP ${res.status}`);
+  res = await api(`/api/books/${detachBook.id}`, { method: 'DELETE', headers: staffAuth });
+  log(res.status === 200, 'soft-delete buku detach', `HTTP ${res.status}`);
+  res = await api(`/api/categories/${detachCat.id}`, { method: 'DELETE', headers: staffAuth });
+  log(res.status === 200, 'DELETE kategori (hanya ref buku soft-deleted) -> 200', `HTTP ${res.status}`);
+  const [detachCatStill] = await db.select({ id: categories.id }).from(categories).where(eq(categories.id, detachCat.id));
+  const [detachBookRow] = await db.select({ categoryId: books.categoryId }).from(books).where(eq(books.id, detachBook.id)).limit(1);
+  log(!detachCatStill && detachBookRow?.categoryId === null, 'kategori terhapus + ref buku soft-deleted dilepas (NULL)');
+
+  // (d) Source with an ACTIVE inventory -> 409.
+  res = await api(`/api/book-sources/${source.id}`, { method: 'DELETE', headers: staffAuth });
+  log(res.status === 409, 'DELETE sumber dipakai inventaris aktif -> 409', `HTTP ${res.status}`);
+
+  // (e) Source with only a soft-deleted inventory -> inventory cleaned + 200.
+  res = await api('/api/book-sources', { method: 'POST', headers: staffAuth, body: JSON.stringify({ name: `${P} Sumber Detach` }) });
+  const srcDetach = await res.json().catch(() => ({}));
+  if (srcDetach?.id) sourceIds.push(srcDetach.id);
+  log(res.status === 201, 'setup sumber detach', `HTTP ${res.status}`);
+  res = await api('/api/books', { method: 'POST', headers: staffAuth, body: JSON.stringify({ title: `${P} Buku SrcDetach`, isbn: `9782${ts.toString().slice(-8)}`, status: 'active' }) });
+  const srcBook = await res.json().catch(() => ({}));
+  if (srcBook?.id) bookIds.push(srcBook.id);
+  log(res.status === 201, 'setup buku sumber detach', `HTTP ${res.status}`);
+  res = await api('/api/inventories', {
+    method: 'POST', headers: staffAuth,
+    body: JSON.stringify({ inventoryCode: `${P}SRCDET`, bookId: srcBook.id, sourceId: srcDetach.id, condition: 'good', status: 'available' }),
+  });
+  const srcInv = await res.json().catch(() => ({}));
+  if (srcInv?.id) inventoryIds.push(srcInv.id);
+  log(res.status === 201, 'setup inventaris sumber detach', `HTTP ${res.status}`);
+  res = await api(`/api/inventories/${srcInv.id}`, { method: 'DELETE', headers: adminAuth });
+  log(res.status === 200, 'soft-delete inventaris sumber detach (admin)', `HTTP ${res.status}`);
+  res = await api(`/api/book-sources/${srcDetach.id}`, { method: 'DELETE', headers: staffAuth });
+  log(res.status === 200, 'DELETE sumber (hanya inventaris soft-deleted) -> 200', `HTTP ${res.status}`);
+  const [srcInvGone] = await db.select({ id: bookInventories.id }).from(bookInventories).where(eq(bookInventories.id, srcInv.id));
+  log(!srcInvGone, 'inventaris soft-deleted ikut dibersihkan fisik');
+
+  // (f) Source whose soft-deleted inventory is in borrowing history -> 409.
+  res = await api('/api/book-sources', { method: 'POST', headers: staffAuth, body: JSON.stringify({ name: `${P} Sumber Riwayat` }) });
+  const srcHist = await res.json().catch(() => ({}));
+  if (srcHist?.id) sourceIds.push(srcHist.id);
+  log(res.status === 201, 'setup sumber riwayat', `HTTP ${res.status}`);
+  res = await api('/api/books', { method: 'POST', headers: staffAuth, body: JSON.stringify({ title: `${P} Buku SrcHist`, isbn: `9783${ts.toString().slice(-8)}`, status: 'active' }) });
+  const histBook = await res.json().catch(() => ({}));
+  if (histBook?.id) bookIds.push(histBook.id);
+  log(res.status === 201, 'setup buku sumber riwayat', `HTTP ${res.status}`);
+  res = await api('/api/inventories', {
+    method: 'POST', headers: staffAuth,
+    body: JSON.stringify({ inventoryCode: `${P}SRCHIST`, bookId: histBook.id, sourceId: srcHist.id, condition: 'good', status: 'available' }),
+  });
+  const histInv = await res.json().catch(() => ({}));
+  if (histInv?.id) inventoryIds.push(histInv.id);
+  log(res.status === 201, 'setup inventaris sumber riwayat', `HTTP ${res.status}`);
+  res = await api('/api/borrowings', {
+    method: 'POST', headers: staffAuth,
+    body: JSON.stringify({ memberId: memId, borrowDate: today, dueDate: due, inventoryIds: [histInv.id] }),
+  });
+  const histBorrow = await res.json().catch(() => ({}));
+  if (histBorrow?.id) borrowingIds.push(histBorrow.id);
+  log(res.status === 201, 'pinjam inventaris riwayat', `HTTP ${res.status}`);
+  res = await api('/api/returns', { method: 'POST', headers: staffAuth, body: JSON.stringify({ borrowingId: histBorrow.id, returnDate: today }) });
+  const histRet = await res.json().catch(() => ({}));
+  if (histRet?.id) returnIds.push(histRet.id);
+  log(res.status === 201, 'kembalikan inventaris riwayat (masuk borrowing_details)', `HTTP ${res.status}`);
+  res = await api(`/api/inventories/${histInv.id}`, { method: 'DELETE', headers: adminAuth });
+  log(res.status === 200, 'soft-delete inventaris yang tercatat riwayat (admin)', `HTTP ${res.status}`);
+  res = await api(`/api/book-sources/${srcHist.id}`, { method: 'DELETE', headers: staffAuth });
+  log(res.status === 409, 'DELETE sumber (inventaris soft-deleted tapi ada riwayat pinjam) -> 409', `HTTP ${res.status}`);
+
+  // ── 16. TRANSACTION DELETE (returned/cancelled) ─────────────────────
+  step('16. Transaction delete (completed)');
+  // (a) Cancel an active borrowing -> cancelled + inventory available.
+  res = await api('/api/borrowings', {
+    method: 'POST', headers: staffAuth,
+    body: JSON.stringify({ memberId: memId, borrowDate: today, dueDate: due, inventoryIds: [invs[1].id] }),
+  });
+  const cancelBorrow = await res.json().catch(() => ({}));
+  if (cancelBorrow?.id) borrowingIds.push(cancelBorrow.id);
+  log(res.status === 201, 'setup peminjaman untuk dibatalkan', `HTTP ${res.status}`);
+  res = await api(`/api/borrowings/${cancelBorrow.id}`, { method: 'DELETE', headers: staffAuth });
+  const cancelRes = await res.json().catch(() => ({}));
+  log(res.status === 200 && cancelRes.cancelled === true, 'DELETE peminjaman aktif -> cancel (200 + cancelled)', `HTTP ${res.status}`);
+  const [cancelRow] = await db.select({ status: borrowings.status }).from(borrowings).where(eq(borrowings.id, cancelBorrow.id)).limit(1);
+  const [invAfterCancel] = await db.select({ status: bookInventories.status }).from(bookInventories).where(eq(bookInventories.id, invs[1].id)).limit(1);
+  log(cancelRow?.status === 'cancelled' && invAfterCancel?.status === 'available', 'status cancelled + inventaris kembali available');
+
+  // (b) Delete a returned borrowing -> physical delete (borrowing + return + detail).
+  res = await api(`/api/borrowings/${borrowing.id}`, { method: 'DELETE', headers: staffAuth });
+  log(res.status === 200, 'DELETE peminjaman returned -> 200', `HTTP ${res.status}`);
+  const [delBorrowGone] = await db.select({ id: borrowings.id }).from(borrowings).where(eq(borrowings.id, borrowing.id));
+  const [delReturnGone] = await db.select({ id: returns.id }).from(returns).where(eq(returns.borrowingId, borrowing.id));
+  log(!delBorrowGone && !delReturnGone, 'borrowing + return terhapus fisik');
+
+  // (c) Delete via /api/returns/:id -> whole transaction (incl. paid fine) gone.
+  res = await api(`/api/returns/${lateRet.id}`, { method: 'DELETE', headers: staffAuth });
+  log(res.status === 200, 'DELETE via /api/returns/:id -> 200', `HTTP ${res.status}`);
+  const [delOverdueGone] = await db.select({ id: borrowings.id }).from(borrowings).where(eq(borrowings.id, overdueBorrow.id));
+  const [delFineGone] = await db.select({ id: fines.id }).from(fines).where(eq(fines.borrowingId, overdueBorrow.id));
+  log(!delOverdueGone && !delFineGone, 'borrowing overdue + denda terhapus (tidak orphan)');
+
+  // (d) 404 for unknown id.
+  res = await api('/api/borrowings/00000000-0000-4000-8000-0000000000ff', { method: 'DELETE', headers: staffAuth });
+  log(res.status === 404, 'DELETE peminjaman id acak -> 404', `HTTP ${res.status}`);
+
+  // ── 17. MEMBER SELF-SERVICE BORROW ──────────────────────────────────
+  step('17. Member self-service borrow');
+  res = await api('/api/books', {
+    method: 'POST', headers: staffAuth,
+    body: JSON.stringify({ title: `${P} Buku Self`, isbn: `9784${ts.toString().slice(-8)}`, status: 'active', stock: 1 }),
+  });
+  const selfBook = await res.json().catch(() => ({}));
+  if (selfBook?.id) bookIds.push(selfBook.id);
+  log(res.status === 201 && !!selfBook.id, 'POST /api/books dengan stock:1 (auto inventaris)', `HTTP ${res.status}`);
+  const [selfInv] = await db.select({ id: bookInventories.id }).from(bookInventories).where(eq(bookInventories.bookId, selfBook.id)).limit(1);
+  if (selfInv?.id) inventoryIds.push(selfInv.id);
+  log(!!selfInv?.id, 'inventaris otomatis dibuat');
+
+  res = await api('/api/borrowings', { method: 'POST', headers: memberAuth, body: JSON.stringify({ bookId: selfBook.id }) });
+  const selfBorrow = await res.json().catch(() => ({}));
+  if (selfBorrow?.id) borrowingIds.push(selfBorrow.id);
+  log(res.status === 201 && selfBorrow.status === 'borrowed', 'member pinjam sendiri (bookId) -> 201', `HTTP ${res.status} | code=${selfBorrow.borrowCode}`);
+  const [selfInvAfter] = await db.select({ status: bookInventories.status }).from(bookInventories).where(eq(bookInventories.id, selfInv.id)).limit(1);
+  log(selfInvAfter?.status === 'borrowed', 'inventaris self-service berstatus borrowed');
+
+  res = await api('/api/returns', { method: 'POST', headers: staffAuth, body: JSON.stringify({ borrowingId: selfBorrow.id, returnDate: today }) });
+  const selfRet = await res.json().catch(() => ({}));
+  if (selfRet?.id) returnIds.push(selfRet.id);
+  log(res.status === 201, 'staff mengembalikan pinjaman member', `HTTP ${res.status}`);
+  res = await api(`/api/borrowings/${selfBorrow.id}`, { method: 'DELETE', headers: staffAuth });
+  log(res.status === 200, 'hapus transaksi self-service yang selesai', `HTTP ${res.status}`);
+
+  // ── 18. SEO / PUBLIC PAGES ──────────────────────────────────────────
+  step('18. SEO / public pages');
+  res = await api('/');
+  log(res.status === 200, 'GET / (publik) 200', `HTTP ${res.status}`);
+  res = await api('/books');
+  log(res.status === 200, 'GET /books (publik) 200', `HTTP ${res.status}`);
+  res = await api(`/books/${book.slug}`);
+  log(res.status === 200, `GET /books/${book.slug} 200`, `HTTP ${res.status}`);
+  res = await api('/books/slug-tidak-ada-12345');
+  log(res.status === 404, 'GET /books/slug-tidak-ada 404', `HTTP ${res.status}`);
+  res = await api('/robots.txt');
+  const robots = await res.text();
+  const robotsLines = robots.split('\n').map((l) => l.trim());
+  log(
+    res.status === 200 &&
+      robots.includes('Sitemap:') &&
+      robotsLines.includes('Disallow: /dashboard') &&
+      robotsLines.includes('Allow: /books') &&
+      !robotsLines.includes('Disallow: /'),
+    'robots.txt: sitemap + disallow private + allow /books (tanpa block semua)',
+    `HTTP ${res.status}`,
+  );
+  res = await api('/sitemap.xml');
+  const sitemap = await res.text();
+  log(
+    res.status === 200 && sitemap.includes(`/books/${book.slug}`) && !sitemap.includes('/dashboard') && !sitemap.includes('/login'),
+    'sitemap.xml: berisi slug buku aktif, tanpa halaman private',
+    `HTTP ${res.status}`,
+  );
+  res = await api('/login');
+  log(res.status === 200, 'GET /login 200', `HTTP ${res.status}`);
+  res = await api('/register');
+  log(res.status === 200, 'GET /register 200', `HTTP ${res.status}`);
+  res = await api('/dashboard', { redirect: 'manual' });
+  log(res.status === 307, 'GET /dashboard (tanpa auth) -> 307 redirect login', `HTTP ${res.status}`);
 
   // ── SUMMARY ─────────────────────────────────────────────────────────
   await cleanup();
