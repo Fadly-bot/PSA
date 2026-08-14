@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import type { Metadata } from 'next';
 import { and, desc, eq, isNull, sql } from 'drizzle-orm';
 import { db } from '@/db/index';
 import { authors, bookInventories, books, categories, members, users } from '@/db/schema';
@@ -8,6 +9,11 @@ import PublicNavbar from '@/components/public-navbar';
 import BookCover from '@/components/book-cover';
 
 export const dynamic = 'force-dynamic';
+
+/** Homepage canonical — resolves against SITE_URL (metadataBase). */
+export const metadata: Metadata = {
+  alternates: { canonical: '/' },
+};
 
 /** Warm editorial palette for category tiles (Figma reference). */
 const TILE_COLORS = [

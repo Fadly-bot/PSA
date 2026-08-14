@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Toast, { useToast } from '@/components/toast';
+import ConfirmDialog from '@/components/confirm-dialog';
 
 type Publisher = {
   id: string;
@@ -24,6 +25,7 @@ export default function PublishersPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [confirmId, setConfirmId] = useState<string | null>(null);
   const { toast, showToast } = useToast();
 
   const load = async (pageNum: number, query?: string) => {
@@ -58,7 +60,6 @@ export default function PublishersPage() {
   };
 
   const onDelete = async (id: string) => {
-    if (!confirm('Hapus penerbit ini?')) return;
     setDeletingId(id);
     try {
       const res = await fetch(`/api/publishers/${id}`, { method: 'DELETE' });
@@ -73,6 +74,7 @@ export default function PublishersPage() {
       showToast({ type: 'error', message: e?.message ?? 'Gagal menghapus penerbit.' });
     } finally {
       setDeletingId(null);
+      setConfirmId(null);
     }
   };
 
@@ -129,7 +131,7 @@ export default function PublishersPage() {
                   <td>
                     <div style={{ display: 'flex', gap: 8 }}>
                       <Link href={`/dashboard/publishers/${item.id}/edit`} className="btn secondary">Edit</Link>
-                      <button className="btn secondary" onClick={() => onDelete(item.id)} disabled={deletingId === item.id}>
+                      <button className="btn secondary" onClick={() => setConfirmId(item.id)} disabled={deletingId === item.id}>
                         {deletingId === item.id ? 'Menghapus...' : 'Hapus'}
                       </button>
                     </div>
@@ -151,6 +153,14 @@ export default function PublishersPage() {
         )}
       </div>
       <Toast toast={toast} />
+      <ConfirmDialog
+        open={confirmId !== null}
+        title="Hapus Penerbit"
+        message={`Apakah Anda yakin ingin menghapus penerbit "${items.find((i) => i.id === confirmId)?.name ?? ''}"? Tindakan ini tidak dapat dibatalkan.`}
+        busy={deletingId !== null}
+        onConfirm={() => { if (confirmId) onDelete(confirmId); }}
+        onCancel={() => setConfirmId(null)}
+      />
     </div>
   );
 }

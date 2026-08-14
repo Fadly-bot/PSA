@@ -9,6 +9,7 @@ import {
   borrowingDetails,
   fines,
   members,
+  returns,
   users,
 } from '@/db/schema';
 import { getCurrentUser, hasPermission } from '@/server/auth-utils';
@@ -148,7 +149,14 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   }
 }
 
-/** Cancel an active borrowing; returns inventories to available. */
+/**
+ * DELETE peminjaman — dua perilaku aman:
+ *  1. Status aktif (borrowed/overdue): batalkan; eksemplar dikembalikan ke
+ *     status available. Inventaris/anggota/buku tidak dihapus.
+ *  2. Status selesai (returned/cancelled): hapus permanen seluruh transaksi
+ *     (detail, pengembalian, denda terkait) di dalam satu transaksi DB.
+ *     Status inventaris TIDAK disentuh — transaksi sudah selesai.
+ */
 export async function DELETE(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
@@ -166,39 +174,60 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
     if (!existing) {
       return NextResponse.json({ error: 'BORROWING_NOT_FOUND: Data peminjaman tidak ditemukan.' }, { status: 404 });
     }
-    if (existing.status !== 'borrowed') {
-      return NextResponse.json({ error: 'Hanya peminjaman berstatus dipinjam yang dapat dibatalkan.' }, { status: 400 });
+
+    // --- Transaksi masih aktif → batalkan (inventaris kembali tersedia). ---
+    if (existing.status === 'borrowed' || existing.status === 'overdue') {
+      await db.transaction(async (tx) => {
+        const detailRows = await tx
+          .select({ inventoryId: borrowingDetails.bookInventoryId })
+          .from(borrowingDetails)
+          .where(eq(borrowingDetails.borrowingId, id));
+
+        await tx
+          .update(borrowings)
+          .set({ status: 'cancelled', updatedAt: new Date() })
+          .where(eq(borrowings.id, id));
+
+        for (const d of detailRows) {
+          await tx
+            .update(bookInventories)
+            .set({ status: 'available', updatedAt: new Date() })
+            .where(eq(bookInventories.id, d.inventoryId));
+        }
+      });
+
+      await createAuditLog({
+        userId: user.id,
+        action: 'DELETE',
+        module: 'BORROWINGS',
+        description: `Batalkan ${existing.borrowCode}`,
+      });
+
+      return NextResponse.json({ success: true, cancelled: true });
     }
 
-    await db.transaction(async (tx) => {
-      const detailRows = await tx
-        .select({ inventoryId: borrowingDetails.bookInventoryId })
-        .from(borrowingDetails)
-        .where(eq(borrowingDetails.borrowingId, id));
+    // --- Transaksi selesai → hapus permanen (bersihkan data lama/testing). ---
+    if (existing.status === 'returned' || existing.status === 'cancelled') {
+      await db.transaction(async (tx) => {
+        await tx.delete(fines).where(eq(fines.borrowingId, id));
+        await tx.delete(returns).where(eq(returns.borrowingId, id));
+        await tx.delete(borrowingDetails).where(eq(borrowingDetails.borrowingId, id));
+        await tx.delete(borrowings).where(eq(borrowings.id, id));
+      });
 
-      await tx
-        .update(borrowings)
-        .set({ status: 'cancelled', updatedAt: new Date() })
-        .where(eq(borrowings.id, id));
+      await createAuditLog({
+        userId: user.id,
+        action: 'DELETE',
+        module: 'BORROWINGS',
+        description: `Hapus ${existing.borrowCode}`,
+      });
 
-      for (const d of detailRows) {
-        await tx
-          .update(bookInventories)
-          .set({ status: 'available', updatedAt: new Date() })
-          .where(eq(bookInventories.id, d.inventoryId));
-      }
-    });
+      return NextResponse.json({ success: true });
+    }
 
-    await createAuditLog({
-      userId: user.id,
-      action: 'DELETE',
-      module: 'BORROWINGS',
-      description: `Batalkan ${existing.borrowCode}`,
-    });
-
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ error: 'Status peminjaman tidak valid untuk dihapus.' }, { status: 400 });
   } catch (error) {
     console.error('DELETE /api/borrowings/:id error', error);
-    return NextResponse.json({ error: 'Gagal membatalkan peminjaman.' }, { status: 500 });
+    return NextResponse.json({ error: 'Gagal menghapus peminjaman.' }, { status: 500 });
   }
 }

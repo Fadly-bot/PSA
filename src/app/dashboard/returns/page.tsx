@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
+import Toast, { useToast } from '@/components/toast';
+import ConfirmDialog from '@/components/confirm-dialog';
 
 type ReturnRow = {
   id: string;
@@ -26,6 +28,9 @@ export default function ReturnsPage() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [confirmId, setConfirmId] = useState<string | null>(null);
+  const { toast, showToast } = useToast();
 
   const load = useCallback(async (pageNum: number) => {
     setLoading(true);
@@ -49,6 +54,25 @@ export default function ReturnsPage() {
   }, []);
 
   useEffect(() => { load(1); }, [load]);
+
+  const onDelete = async (id: string) => {
+    setDeletingId(id);
+    try {
+      const res = await fetch(`/api/returns/${id}`, { method: 'DELETE' });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data?.error ?? 'Gagal menghapus.');
+      }
+      setItems((prev) => prev.filter((i) => i.id !== id));
+      setTotal((t) => t - 1);
+      showToast({ type: 'success', message: 'Pengembalian berhasil dihapus.' });
+    } catch (e: any) {
+      showToast({ type: 'error', message: e?.message ?? 'Gagal menghapus pengembalian.' });
+    } finally {
+      setDeletingId(null);
+      setConfirmId(null);
+    }
+  };
 
   return (
     <div>
@@ -87,7 +111,12 @@ export default function ReturnsPage() {
                   <td>{r.returnDate}</td>
                   <td><span className={`badge ${r.status === 'late' ? 'error' : 'success'}`}>{r.status === 'late' ? 'Terlambat' : 'Tepat Waktu'}</span></td>
                   <td>
-                    <Link href={`/dashboard/borrowings/${r.borrowing?.id}`} className="btn secondary">Detail</Link>
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      <Link href={`/dashboard/borrowings/${r.borrowing?.id}`} className="btn secondary">Detail</Link>
+                      <button className="btn secondary" onClick={() => setConfirmId(r.id)} disabled={deletingId === r.id}>
+                        {deletingId === r.id ? 'Menghapus...' : 'Hapus'}
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -105,6 +134,15 @@ export default function ReturnsPage() {
           </div>
         )}
       </div>
+      <Toast toast={toast} />
+      <ConfirmDialog
+        open={confirmId !== null}
+        title="Hapus Pengembalian"
+        message={`Apakah Anda yakin ingin menghapus pengembalian "${items.find((i) => i.id === confirmId)?.borrowing?.borrowCode ?? ''}" beserta transaksi peminjaman terkait? Tindakan ini tidak dapat dibatalkan.`}
+        busy={deletingId !== null}
+        onConfirm={() => { if (confirmId) onDelete(confirmId); }}
+        onCancel={() => setConfirmId(null)}
+      />
     </div>
   );
 }

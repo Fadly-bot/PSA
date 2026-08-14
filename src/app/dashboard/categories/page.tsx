@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Toast, { useToast } from '@/components/toast';
+import ConfirmDialog from '@/components/confirm-dialog';
 
 type Category = {
   id: string;
@@ -21,6 +22,7 @@ export default function CategoriesPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [confirmId, setConfirmId] = useState<string | null>(null);
   const { toast, showToast } = useToast();
 
   const load = async (pageNum: number, query?: string) => {
@@ -55,7 +57,6 @@ export default function CategoriesPage() {
   };
 
   const onDelete = async (id: string) => {
-    if (!confirm('Hapus kategori ini?')) return;
     setDeletingId(id);
     try {
       const res = await fetch(`/api/categories/${id}`, { method: 'DELETE' });
@@ -70,6 +71,7 @@ export default function CategoriesPage() {
       showToast({ type: 'error', message: e?.message ?? 'Gagal menghapus kategori.' });
     } finally {
       setDeletingId(null);
+      setConfirmId(null);
     }
   };
 
@@ -122,7 +124,7 @@ export default function CategoriesPage() {
                   <td>
                     <div style={{ display: 'flex', gap: 8 }}>
                       <Link href={`/dashboard/categories/${item.id}/edit`} className="btn secondary">Edit</Link>
-                      <button className="btn secondary" onClick={() => onDelete(item.id)} disabled={deletingId === item.id}>
+                      <button className="btn secondary" onClick={() => setConfirmId(item.id)} disabled={deletingId === item.id}>
                         {deletingId === item.id ? 'Menghapus...' : 'Hapus'}
                       </button>
                     </div>
@@ -144,6 +146,14 @@ export default function CategoriesPage() {
         )}
       </div>
       <Toast toast={toast} />
+      <ConfirmDialog
+        open={confirmId !== null}
+        title="Hapus Kategori"
+        message={`Apakah Anda yakin ingin menghapus kategori "${items.find((i) => i.id === confirmId)?.name ?? ''}"? Tindakan ini tidak dapat dibatalkan.`}
+        busy={deletingId !== null}
+        onConfirm={() => { if (confirmId) onDelete(confirmId); }}
+        onCancel={() => setConfirmId(null)}
+      />
     </div>
   );
 }

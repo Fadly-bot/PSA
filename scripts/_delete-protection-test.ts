@@ -174,6 +174,9 @@ async function main() {
       await db.delete(auditLogs).where(eq(auditLogs.userId, userId));
       await db.delete(sessions).where(eq(sessions.userId, userId));
       await db.delete(accounts).where(eq(accounts.userId, userId));
+      // Self-registration also creates a members row (FK restrict) — remove it
+      // before the user row so cleanup never leaves a leftover.
+      await db.delete(members).where(eq(members.userId, userId)).catch(() => {});
       await db.delete(users).where(eq(users.id, userId));
     }
   } catch (e: any) {

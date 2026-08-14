@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import Toast, { useToast } from '@/components/toast';
+import ConfirmDialog from '@/components/confirm-dialog';
 
 type BookSource = {
   id: string;
@@ -20,6 +22,8 @@ export default function BookSourcesPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [confirmId, setConfirmId] = useState<string | null>(null);
+  const { toast, showToast } = useToast();
 
   const load = async (pageNum: number, query?: string) => {
     setLoading(true);
@@ -53,7 +57,6 @@ export default function BookSourcesPage() {
   };
 
   const onDelete = async (id: string) => {
-    if (!confirm('Hapus sumber buku ini?')) return;
     setDeletingId(id);
     try {
       const res = await fetch(`/api/book-sources/${id}`, { method: 'DELETE' });
@@ -63,10 +66,12 @@ export default function BookSourcesPage() {
       }
       setItems((prev) => prev.filter((i) => i.id !== id));
       setTotal((t) => t - 1);
+      showToast({ type: 'success', message: 'Sumber buku berhasil dihapus.' });
     } catch (e: any) {
-      alert(e?.message ?? 'Gagal menghapus.');
+      showToast({ type: 'error', message: e?.message ?? 'Gagal menghapus sumber buku.' });
     } finally {
       setDeletingId(null);
+      setConfirmId(null);
     }
   };
 
@@ -119,7 +124,7 @@ export default function BookSourcesPage() {
                   <td>
                     <div style={{ display: 'flex', gap: 8 }}>
                       <Link href={`/dashboard/book-sources/${item.id}/edit`} className="btn secondary">Edit</Link>
-                      <button className="btn secondary" onClick={() => onDelete(item.id)} disabled={deletingId === item.id}>
+                      <button className="btn secondary" onClick={() => setConfirmId(item.id)} disabled={deletingId === item.id}>
                         {deletingId === item.id ? 'Menghapus...' : 'Hapus'}
                       </button>
                     </div>
@@ -140,6 +145,15 @@ export default function BookSourcesPage() {
           </div>
         )}
       </div>
+      <Toast toast={toast} />
+      <ConfirmDialog
+        open={confirmId !== null}
+        title="Hapus Sumber Buku"
+        message={`Apakah Anda yakin ingin menghapus sumber buku "${items.find((i) => i.id === confirmId)?.name ?? ''}"? Tindakan ini tidak dapat dibatalkan.`}
+        busy={deletingId !== null}
+        onConfirm={() => { if (confirmId) onDelete(confirmId); }}
+        onCancel={() => setConfirmId(null)}
+      />
     </div>
   );
 }

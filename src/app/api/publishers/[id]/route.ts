@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/db/index';
 import { publishers, books } from '@/db/schema';
-import { eq, sql } from 'drizzle-orm';
+import { and, eq, isNull, sql } from 'drizzle-orm';
 import { getCurrentUser, hasPermission } from '@/server/auth-utils';
 import { createAuditLog } from '@/server/audit';
 
@@ -107,7 +107,13 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
       return NextResponse.json({ error: 'Penerbit tidak ditemukan.' }, { status: 404 });
     }
 
-    const [relatedBooks] = await db.select({ count: sql<number>`count(*)` }).from(books).where(eq(books.publisherId, id)).limit(1);
+    // Only ACTIVE books (not soft-deleted) block deletion. A penerbit that is
+    // only referenced by soft-deleted books is considered unused; those
+    // references are safely detached (the column is nullable) before delete.
+    const [relatedBooks] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(books)
+      .where(and(eq(books.publisherId, id), isNull(books.deletedAt)));
     const publisherInUseCount = Number(relatedBooks?.count ?? 0);
     if (publisherInUseCount > 0) {
       return NextResponse.json(
@@ -120,7 +126,15 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
       );
     }
 
-    await db.delete(publishers).where(eq(publishers.id, id));
+    await db.transaction(async (tx) => {
+      // Lepas referensi hanya dari buku yang sudah dihapus (soft-delete).
+      // Buku aktif tidak pernah kehilangan relasinya.
+      await tx
+        .update(books)
+        .set({ publisherId: null })
+        .where(and(eq(books.publisherId, id), sql`${books.deletedAt} IS NOT NULL`));
+      await tx.delete(publishers).where(eq(publishers.id, id));
+    });
     await createAuditLog({
       userId: user.id,
       action: 'DELETE',

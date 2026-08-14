@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/db/index';
-import { bookSources, bookInventories } from '@/db/schema';
-import { eq, sql } from 'drizzle-orm';
+import { bookSources, bookInventories, borrowingDetails } from '@/db/schema';
+import { and, eq, inArray, isNull, sql } from 'drizzle-orm';
 import { getCurrentUser, hasPermission } from '@/server/auth-utils';
 import { createAuditLog } from '@/server/audit';
 
@@ -87,12 +87,56 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
       return NextResponse.json({ error: 'Sumber buku tidak ditemukan.' }, { status: 404 });
     }
 
-    const [relatedInventories] = await db.select({ count: sql<number>`count(*)` }).from(bookInventories).where(eq(bookInventories.sourceId, id)).limit(1);
+    // `book_inventories.source_id` is NOT NULL, so a source referenced by any
+    // ACTIVE (not soft-deleted) inventory cannot be deleted — that is a real
+    // integrity constraint and we surface a clear message instead.
+    const [relatedInventories] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(bookInventories)
+      .where(and(eq(bookInventories.sourceId, id), isNull(bookInventories.deletedAt)));
     if (Number(relatedInventories?.count ?? 0) > 0) {
-      return NextResponse.json({ error: 'Sumber buku masih digunakan oleh inventaris.' }, { status: 409 });
+      return NextResponse.json(
+        {
+          error: 'Sumber buku tidak dapat dihapus karena masih digunakan oleh inventaris buku. Ubah atau hapus inventaris tersebut terlebih dahulu, lalu coba lagi.',
+          code: 'MASTER_DATA_IN_USE',
+          count: Number(relatedInventories?.count ?? 0),
+        },
+        { status: 409 },
+      );
     }
 
-    await db.delete(bookSources).where(eq(bookSources.id, id));
+    // Inventaris yang sudah soft-deleted dianggap tidak dipakai. Untuk menjaga
+    // referential integrity (source_id NOT NULL) inventaris tersebut dibersihkan
+    // secara fisik — KECUALI masih tercatat pada riwayat peminjaman
+    // (borrowing_details), yang tidak boleh disentuh.
+    const deletedInventories = await db
+      .select({ id: bookInventories.id })
+      .from(bookInventories)
+      .where(and(eq(bookInventories.sourceId, id), sql`${bookInventories.deletedAt} IS NOT NULL`));
+    const deletedInventoryIds = deletedInventories.map((i) => i.id);
+
+    if (deletedInventoryIds.length > 0) {
+      const [historyRefs] = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(borrowingDetails)
+        .where(inArray(borrowingDetails.bookInventoryId, deletedInventoryIds));
+      if (Number(historyRefs?.count ?? 0) > 0) {
+        return NextResponse.json(
+          {
+            error: 'Sumber buku tidak dapat dihapus karena masih tercatat pada riwayat peminjaman. Hapus transaksi peminjaman terkait terlebih dahulu, lalu coba lagi.',
+            code: 'MASTER_DATA_IN_USE',
+          },
+          { status: 409 },
+        );
+      }
+    }
+
+    await db.transaction(async (tx) => {
+      if (deletedInventoryIds.length > 0) {
+        await tx.delete(bookInventories).where(inArray(bookInventories.id, deletedInventoryIds));
+      }
+      await tx.delete(bookSources).where(eq(bookSources.id, id));
+    });
     await createAuditLog({
       userId: user.id,
       action: 'DELETE',
