@@ -71,6 +71,7 @@ export default function LoginPage() {
               alt="TBM Semesta Alam"
               width={1233}
               height={578}
+              sizes="(max-width: 640px) 96px, 128px"
               style={{ height: 40, width: 'auto' }}
             />
           </Link>

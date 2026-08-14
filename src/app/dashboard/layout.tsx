@@ -224,6 +224,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             alt="TBM Semesta Alam"
             width={1233}
             height={578}
+            sizes="(max-width: 640px) 96px, 128px"
             style={{ height: 24, width: 'auto' }}
           />
         </Link>
@@ -267,6 +268,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 alt="TBM Semesta Alam"
                 width={1233}
                 height={578}
+                sizes="(max-width: 640px) 96px, 128px"
                 style={{ height: 26, width: 'auto' }}
               />
               <button
@@ -321,6 +323,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 alt="TBM Semesta Alam"
                 width={1233}
                 height={578}
+                sizes="(max-width: 640px) 96px, 128px"
                 style={{ height: 30, width: 'auto' }}
               />
             </Link>

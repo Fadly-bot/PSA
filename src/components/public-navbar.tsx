@@ -121,7 +121,15 @@ export default function PublicNavbar({
         }}
       >
         <Link href="/" aria-label="TBM Semesta Alam — Beranda" style={{ display: 'inline-flex', lineHeight: 0 }}>
-          <Image src="/logo-tbm-semesta-alam-nav.png" alt="TBM Semesta Alam" width={1233} height={578} className="brand-logo" priority />
+          <Image
+            src="/logo-tbm-semesta-alam-nav.png"
+            alt="TBM Semesta Alam"
+            width={1233}
+            height={578}
+            sizes="(max-width: 640px) 96px, 128px"
+            className="brand-logo"
+            priority
+          />
         </Link>
 
         {/* Desktop links */}
